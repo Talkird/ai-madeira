@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface FurnitureItem {
   id: string;
@@ -16,6 +16,8 @@ interface FurnitureItem {
 function App() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
+  const [isARMode, setIsARMode] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const furnitureItems: FurnitureItem[] = [
     {
@@ -61,6 +63,33 @@ function App() {
   ];
 
   const currentItem = furnitureItems.find((f) => f.id === selectedItem);
+
+  // Start AR camera
+  const startARCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setIsARMode(true);
+      }
+    } catch (error) {
+      alert("Camera access denied or not available. Please check permissions.");
+      console.error("Camera error:", error);
+    }
+  };
+
+  // Stop AR camera
+  const stopARCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      setIsARMode(false);
+    }
+  };
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -116,40 +145,74 @@ function App() {
         <div className="w-full h-screen flex flex-col bg-black">
           {/* 3D Preview Area */}
           <div className="flex-1 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center relative overflow-hidden">
-            {/* Grid Background */}
-            <div
-              className="absolute inset-0 opacity-5"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, #fff 1px, transparent 1px), linear-gradient(0deg, #fff 1px, transparent 1px)",
-                backgroundSize: "50px 50px",
-              }}
-            />
+            {isARMode ? (
+              // Camera AR Mode
+              <>
+                <video
+                  ref={videoRef}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ transform: "scaleX(-1)" }}
+                />
+                <div className="absolute inset-0 bg-black/20" />
+                {/* Furniture overlay on camera */}
+                <div className="relative z-10 flex items-center justify-center">
+                  <div
+                    className="rounded-lg transition-transform duration-300"
+                    style={{
+                      backgroundColor: currentItem?.color,
+                      width: `${(currentItem?.dimensions.width || 1) * 100 * scale}px`,
+                      height: `${(currentItem?.dimensions.height || 1) * 100 * scale}px`,
+                      transform: "rotateY(15deg) rotateX(5deg)",
+                      boxShadow:
+                        "inset -10px -10px 30px rgba(0,0,0,0.5), -30px 30px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.3)",
+                      opacity: 0.8,
+                    }}
+                  />
+                </div>
+                {/* AR Info Badge */}
+                <div className="absolute top-6 left-6 bg-green-500 text-white px-4 py-2 rounded-full font-bold text-sm">
+                  🎥 AR Mode Active
+                </div>
+              </>
+            ) : (
+              // Regular 3D Preview
+              <>
+                {/* Grid Background */}
+                <div
+                  className="absolute inset-0 opacity-5"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, #fff 1px, transparent 1px), linear-gradient(0deg, #fff 1px, transparent 1px)",
+                    backgroundSize: "50px 50px",
+                  }}
+                />
 
-            {/* 3D Furniture Preview */}
-            <div className="relative z-10">
-              <div
-                className="rounded-lg transition-transform duration-300"
-                style={{
-                  backgroundColor: currentItem?.color,
-                  width: `${(currentItem?.dimensions.width || 1) * 100 * scale}px`,
-                  height: `${(currentItem?.dimensions.height || 1) * 100 * scale}px`,
-                  transform: "rotateY(15deg) rotateX(5deg)",
-                  boxShadow:
-                    "inset -10px -10px 30px rgba(0,0,0,0.5), -30px 30px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.3)",
-                }}
-              />
+                {/* 3D Furniture Preview */}
+                <div className="relative z-10">
+                  <div
+                    className="rounded-lg transition-transform duration-300"
+                    style={{
+                      backgroundColor: currentItem?.color,
+                      width: `${(currentItem?.dimensions.width || 1) * 100 * scale}px`,
+                      height: `${(currentItem?.dimensions.height || 1) * 100 * scale}px`,
+                      transform: "rotateY(15deg) rotateX(5deg)",
+                      boxShadow:
+                        "inset -10px -10px 30px rgba(0,0,0,0.5), -30px 30px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.3)",
+                    }}
+                  />
 
-              {/* Shadow */}
-              <div
-                className="absolute top-full left-1/2 -translate-x-1/2 bg-black/40 rounded-full blur-2xl"
-                style={{
-                  width: `${(currentItem?.dimensions.width || 1) * 100 * scale}px`,
-                  height: `${(currentItem?.dimensions.depth || 1) * 50 * scale}px`,
-                  marginTop: "10px",
-                }}
-              />
-            </div>
+                  {/* Shadow */}
+                  <div
+                    className="absolute top-full left-1/2 -translate-x-1/2 bg-black/40 rounded-full blur-2xl"
+                    style={{
+                      width: `${(currentItem?.dimensions.width || 1) * 100 * scale}px`,
+                      height: `${(currentItem?.dimensions.depth || 1) * 50 * scale}px`,
+                      marginTop: "10px",
+                    }}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           {/* Controls */}
@@ -169,7 +232,10 @@ function App() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setSelectedItem(null)}
+                  onClick={() => {
+                    setSelectedItem(null);
+                    stopARCamera();
+                  }}
                   className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition whitespace-nowrap ml-4"
                 >
                   ← Back
@@ -227,12 +293,31 @@ function App() {
 
               {/* Action Buttons */}
               <div className="flex gap-4">
-                <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition">
-                  📱 View with Camera
-                </button>
-                <button className="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold px-8 py-3 rounded-lg transition">
-                  🛒 Add to Cart
-                </button>
+                {isARMode ? (
+                  <>
+                    <button
+                      onClick={stopARCamera}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+                    >
+                      ⏹️ Exit AR Mode
+                    </button>
+                    <button className="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold px-8 py-3 rounded-lg transition">
+                      🛒 Add to Cart
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={startARCamera}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+                    >
+                      📱 View with Camera
+                    </button>
+                    <button className="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold px-8 py-3 rounded-lg transition">
+                      🛒 Add to Cart
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
