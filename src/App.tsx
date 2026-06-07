@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { furnitureItems } from "./data/furnitureData";
-import type { Furniture } from "./types/furniture";
 import { ARCamera } from "./components/ARCamera";
 
 function App() {
