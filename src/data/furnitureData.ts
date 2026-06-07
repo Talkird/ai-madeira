@@ -1,4 +1,4 @@
-import { Furniture } from "../types/furniture";
+import type { Furniture } from "../types/furniture";
 
 export const furnitureItems: Furniture[] = [
   {
