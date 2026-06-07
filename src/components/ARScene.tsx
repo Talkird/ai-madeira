@@ -31,19 +31,26 @@ function InteractiveBox({
   onExit: () => void;
 }) {
   const [position, setPosition] = useState<[number, number, number]>([0, 0, 0]);
-  const [rotation, setRotation] = useState(0); // Y rotation only (IKEA style)
+  const [rotation, setRotation] = useState(0);
   const [zoom, setZoom] = useState(1);
 
   const dragging = useRef(false);
+  const mode = useRef<"rotate" | "move">("rotate");
+
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
   const lastDist = useRef<number | null>(null);
 
   // =====================
-  // DRAG + ROTATION (IKEA STYLE)
+  // START TOUCH
   // =====================
   const onPointerDown = (e: any) => {
     dragging.current = true;
     lastPointer.current = { x: e.clientX, y: e.clientY };
+
+    // 👇 decide modo:
+    // si es más horizontal → rotate
+    // si es más vertical → move
+    mode.current = "rotate";
   };
 
   const onPointerMove = (e: any) => {
@@ -54,11 +61,16 @@ function InteractiveBox({
 
     lastPointer.current = { x: e.clientX, y: e.clientY };
 
-    // 🔥 Cambio clave:
-    // horizontal = rotación (feel IKEA)
-    // vertical = mover objeto
-    setRotation((r) => r + dx * 0.01);
+    // =====================
+    // ROTACIÓN IKEA (suave)
+    // =====================
+    if (mode.current === "rotate") {
+      setRotation((r) => r + dx * 0.008);
+    }
 
+    // =====================
+    // MOVIMIENTO
+    // =====================
     setPosition(([x, y, z]) => [
       x,
       y - dy * 0.01,
@@ -83,7 +95,10 @@ function InteractiveBox({
 
       if (lastDist.current !== null) {
         const diff = dist - lastDist.current;
-        setZoom((z) => Math.max(0.5, Math.min(3, z + diff * 0.005)));
+
+        setZoom((z) =>
+          Math.max(0.5, Math.min(3, z + diff * 0.005))
+        );
       }
 
       lastDist.current = dist;
@@ -93,7 +108,6 @@ function InteractiveBox({
   return (
     <div className="w-full h-full relative">
 
-      {/* EXIT BUTTON */}
       <button
         onClick={onExit}
         className="absolute top-4 left-4 z-10 bg-red-600 text-white px-4 py-2 rounded"
@@ -109,7 +123,6 @@ function InteractiveBox({
         <ambientLight intensity={0.6} />
         <directionalLight position={[2, 5, 2]} intensity={1} />
 
-        {/* 🔥 CONTROL GROUP (correcto lugar para transformaciones) */}
         <group
           position={position}
           rotation={[0, rotation, 0]}

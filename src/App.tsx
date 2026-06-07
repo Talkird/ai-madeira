@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { furnitureItems } from "./data/furnitureData";
-import { ARCamera } from "./components/ARCamera";
+import { ARScene } from "./components/ARScene";
 
 function App() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
@@ -67,7 +67,7 @@ function App() {
           <div className="flex-1 flex items-center justify-center">
 
             {isARMode ? (
-              <ARCamera
+              <ARScene
                 item={currentItem}
                 scale={scale}
                 onExit={() => setIsARMode(false)}
