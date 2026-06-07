@@ -30,9 +30,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
     const startCamera = async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "environment",
-          },
+          video: { facingMode: "environment" },
           audio: false,
         });
 
@@ -63,10 +61,17 @@ export function ARCamera({ item, scale, onExit }: Props) {
         y: e.touches[0].clientY,
       };
     }
+
+    if (e.touches.length === 2) {
+      dragging.current = false; // 👈 evita conflicto drag vs pinch
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastDist.current = Math.sqrt(dx * dx + dy * dy);
+    }
   };
 
   // =====================
-  // TOUCH MOVE (IKEA BEHAVIOR)
+  // TOUCH MOVE
   // =====================
   const onTouchMove = (e: React.TouchEvent) => {
     // =====================
@@ -80,7 +85,10 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
       if (lastDist.current !== null) {
         const diff = dist - lastDist.current;
-        setZoom((z) => Math.max(0.5, Math.min(3, z + diff * 0.005)));
+
+        setZoom((z) =>
+          Math.max(0.5, Math.min(3, z + diff * 0.005))
+        );
       }
 
       lastDist.current = dist;
@@ -88,7 +96,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
     }
 
     // =====================
-    // DRAG + ROTATION
+    // DRAG + ROTATION (IKEA STYLE)
     // =====================
     if (!dragging.current || !lastPointer.current) return;
 
@@ -100,17 +108,14 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
     lastPointer.current = { x, y };
 
-    // IKEA STYLE:
-    setRotation((r) => r + dx * 0.01); // horizontal rotate
+    // IKEA FEEL:
+    setRotation((r) => r + dx * 0.01);
     setPosition(([px, py]) => [
       px + dx * 0.002,
       py - dy * 0.002,
     ]);
   };
 
-  // =====================
-  // TOUCH END
-  // =====================
   const onTouchEnd = () => {
     dragging.current = false;
     lastPointer.current = null;
@@ -129,10 +134,9 @@ export function ARCamera({ item, scale, onExit }: Props) {
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* DARK OVERLAY */}
       <div className="absolute inset-0 bg-black/10" />
 
-      {/* FURNITURE OVERLAY (INTERACTIVE) */}
+      {/* OBJECT */}
       <div
         className="absolute inset-0 flex items-center justify-center"
         onTouchStart={onTouchStart}
@@ -156,7 +160,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
         />
       </div>
 
-      {/* EXIT BUTTON */}
+      {/* EXIT */}
       <button
         onClick={onExit}
         className="absolute top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg"
