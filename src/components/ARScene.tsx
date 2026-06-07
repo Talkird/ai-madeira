@@ -31,7 +31,7 @@ function InteractiveBox({
   onExit: () => void;
 }) {
   const [position, setPosition] = useState<[number, number, number]>([0, 0, 0]);
-  const [rotation, setRotation] = useState(0);
+  const [rotation, setRotation] = useState(0); // Y rotation only (IKEA style)
   const [zoom, setZoom] = useState(1);
 
   const dragging = useRef(false);
@@ -39,7 +39,7 @@ function InteractiveBox({
   const lastDist = useRef<number | null>(null);
 
   // =====================
-  // DRAG (mover objeto)
+  // DRAG + ROTATION (IKEA STYLE)
   // =====================
   const onPointerDown = (e: any) => {
     dragging.current = true;
@@ -54,8 +54,13 @@ function InteractiveBox({
 
     lastPointer.current = { x: e.clientX, y: e.clientY };
 
+    // 🔥 Cambio clave:
+    // horizontal = rotación (feel IKEA)
+    // vertical = mover objeto
+    setRotation((r) => r + dx * 0.01);
+
     setPosition(([x, y, z]) => [
-      x + dx * 0.01,
+      x,
       y - dy * 0.01,
       z,
     ]);
@@ -64,13 +69,6 @@ function InteractiveBox({
   const onPointerUp = () => {
     dragging.current = false;
     lastPointer.current = null;
-  };
-
-  // =====================
-  // ROTACIÓN (wheel desktop)
-  // =====================
-  const onWheel = (e: any) => {
-    setRotation((r) => r + e.deltaY * 0.001);
   };
 
   // =====================
@@ -106,23 +104,21 @@ function InteractiveBox({
       <Canvas
         camera={{ position: [2, 2, 2] }}
         onPointerUp={onPointerUp}
-        onWheel={onWheel}
         onTouchMove={onTouchMove}
       >
         <ambientLight intensity={0.6} />
         <directionalLight position={[2, 5, 2]} intensity={1} />
 
-        {/* OBJECT */}
-        <mesh
+        {/* 🔥 CONTROL GROUP (correcto lugar para transformaciones) */}
+        <group
           position={position}
+          rotation={[0, rotation, 0]}
+          scale={zoom}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
         >
-          {/* rotation + zoom aplicados al grupo */}
-          <group rotation={[0, rotation, 0]} scale={zoom}>
-            <Box item={item} />
-          </group>
-        </mesh>
+          <Box item={item} />
+        </group>
 
       </Canvas>
     </div>
