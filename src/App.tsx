@@ -67,6 +67,7 @@ function App() {
   // Start AR camera
   const startARCamera = async () => {
     try {
+      console.log("Starting camera...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment",
@@ -75,20 +76,31 @@ function App() {
         },
         audio: false,
       });
+      console.log("Stream obtained:", stream);
       if (videoRef.current) {
+        console.log("Setting video srcObject...");
         videoRef.current.srcObject = stream;
         // Ensure video plays
         const playPromise = videoRef.current.play();
         if (playPromise !== undefined) {
-          playPromise.catch((error) => {
-            console.error("Video play error:", error);
-          });
+          playPromise
+            .then(() => {
+              console.log("Video playing successfully");
+              setIsARMode(true);
+            })
+            .catch((error) => {
+              console.error("Video play error:", error);
+              alert("Failed to play video: " + error.message);
+            });
+        } else {
+          setIsARMode(true);
         }
-        setIsARMode(true);
+      } else {
+        console.error("Video ref is null");
       }
     } catch (error) {
-      alert("Camera access denied or not available. Please check permissions.");
       console.error("Camera error:", error);
+      alert("Camera access denied or not available. Please check permissions.");
     }
   };
 
@@ -163,8 +175,13 @@ function App() {
                   autoPlay
                   playsInline
                   muted
+                  width={1280}
+                  height={720}
                   className="absolute inset-0 w-full h-full object-cover"
-                  style={{ transform: "scaleX(-1)" }}
+                  style={{
+                    transform: "scaleX(-1)",
+                    display: "block",
+                  }}
                 />
                 <div className="absolute inset-0 bg-black/20" />
                 {/* Furniture overlay on camera */}
