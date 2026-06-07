@@ -68,12 +68,22 @@ function App() {
   const startARCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
         audio: false,
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        // Ensure video plays
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            console.error("Video play error:", error);
+          });
+        }
         setIsARMode(true);
       }
     } catch (error) {
@@ -150,6 +160,9 @@ function App() {
               <>
                 <video
                   ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{ transform: "scaleX(-1)" }}
                 />
