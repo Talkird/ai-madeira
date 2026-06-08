@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Canvas } from "@react-three/fiber";
 import type { Furniture } from "../types/furniture";
 
 interface Props {
@@ -7,52 +8,54 @@ interface Props {
   onExit: () => void;
 }
 
+function Box({ item }: { item: Furniture }) {
+  return (
+    <mesh>
+      <boxGeometry
+        args={[
+          item.dimensions.width,
+          item.dimensions.height,
+          item.dimensions.depth,
+        ]}
+      />
+      <meshStandardMaterial color={item.color} />
+    </mesh>
+  );
+}
+
 export function ARCamera({ item, scale, onExit }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // =====================
-  // STATE INTERACTION
-  // =====================
+  const [position, setPosition] = useState<[number, number, number]>([0, 0, -2]);
+  const [rotation, setRotation] = useState(0);
+  const [zoom, setZoom] = useState(1);
+
   const dragging = useRef(false);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
   const lastDist = useRef<number | null>(null);
 
-  const [position, setPosition] = useState<[number, number]>([0, 0]);
-  const [rotation, setRotation] = useState(0);
-  const [zoom, setZoom] = useState(1);
-
-  // =====================
-  // CAMERA
-  // =====================
   useEffect(() => {
     let stream: MediaStream;
 
-    const startCamera = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-          audio: false,
-        });
+    const start = async () => {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
 
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-        }
-      } catch (err) {
-        console.error("Camera error:", err);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
       }
     };
 
-    startCamera();
+    start();
 
     return () => {
       stream?.getTracks().forEach((t) => t.stop());
     };
   }, []);
 
-  // =====================
-  // TOUCH START
-  // =====================
   const onTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       dragging.current = true;
@@ -63,20 +66,15 @@ export function ARCamera({ item, scale, onExit }: Props) {
     }
 
     if (e.touches.length === 2) {
-      dragging.current = false; // 👈 evita conflicto drag vs pinch
+      dragging.current = false;
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       lastDist.current = Math.sqrt(dx * dx + dy * dy);
     }
   };
 
-  // =====================
-  // TOUCH MOVE
-  // =====================
   const onTouchMove = (e: React.TouchEvent) => {
-    // =====================
-    // PINCH ZOOM
-    // =====================
+    // PINCH
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -85,19 +83,14 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
       if (lastDist.current !== null) {
         const diff = dist - lastDist.current;
-
-        setZoom((z) =>
-          Math.max(0.5, Math.min(3, z + diff * 0.005))
-        );
+        setZoom((z) => Math.max(0.5, Math.min(3, z + diff * 0.005)));
       }
 
       lastDist.current = dist;
       return;
     }
 
-    // =====================
-    // DRAG + ROTATION (IKEA STYLE)
-    // =====================
+    // DRAG + ROTATE
     if (!dragging.current || !lastPointer.current) return;
 
     const x = e.touches[0].clientX;
@@ -108,11 +101,12 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
     lastPointer.current = { x, y };
 
-    // IKEA FEEL:
     setRotation((r) => r + dx * 0.01);
-    setPosition(([px, py]) => [
+
+    setPosition(([px, py, pz]) => [
       px + dx * 0.002,
       py - dy * 0.002,
+      pz,
     ]);
   };
 
@@ -136,28 +130,32 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
       <div className="absolute inset-0 bg-black/10" />
 
-      {/* OBJECT */}
+      {/* 3D OVERLAY */}
       <div
-        className="absolute inset-0 flex items-center justify-center"
+        className="absolute inset-0"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div
-          style={{
-            width: item.dimensions.width * 100 * scale,
-            height: item.dimensions.height * 100 * scale,
-            backgroundColor: item.color,
-            transform: `
-              translate(${position[0]}px, ${position[1]}px)
-              rotateY(${rotation}rad)
-              scale(${zoom})
-            `,
-            boxShadow:
-              "inset -10px -10px 30px rgba(0,0,0,0.5), -20px 20px 50px rgba(0,0,0,0.6)",
+        <Canvas
+          className="w-full h-full"
+          gl={{ alpha: true }}
+          camera={{
+            position: [0, 0, 3],
+            fov: 60,
           }}
-          className="rounded-lg"
-        />
+        >
+          <ambientLight intensity={0.7} />
+          <directionalLight position={[2, 5, 2]} intensity={1} />
+
+          <group
+            position={position}
+            rotation={[0, rotation, 0]}
+            scale={zoom * scale}
+          >
+            <Box item={item} />
+          </group>
+        </Canvas>
       </div>
 
       {/* EXIT */}
