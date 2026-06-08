@@ -1,10 +1,11 @@
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import {
   OrbitControls,
   Environment,
   useGLTF,
 } from "@react-three/drei";
+import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
 
 function GLBModel({
@@ -16,9 +17,27 @@ function GLBModel({
 }) {
   const { scene } = useGLTF(model);
 
+  const cloned = useRef(scene.clone());
+
+  useEffect(() => {
+    const box = new THREE.Box3().setFromObject(
+      cloned.current
+    );
+
+    const center = new THREE.Vector3();
+
+    box.getCenter(center);
+
+    cloned.current.position.set(
+      -center.x,
+      -box.min.y,
+      -center.z
+    );
+  }, []);
+
   return (
     <primitive
-      object={scene.clone()}
+      object={cloned.current}
       scale={scale}
     />
   );
@@ -32,7 +51,10 @@ function FallbackFurniture({
   scale: number;
 }) {
   return (
-    <mesh scale={scale}>
+    <mesh
+      scale={scale}
+      position={[0, furniture.dimensions.height / 2, 0]}
+    >
       <boxGeometry
         args={[
           furniture.dimensions.width,
@@ -40,7 +62,10 @@ function FallbackFurniture({
           furniture.dimensions.depth,
         ]}
       />
-      <meshStandardMaterial color={furniture.color} />
+
+      <meshStandardMaterial
+        color={furniture.color}
+      />
     </mesh>
   );
 }
@@ -63,9 +88,14 @@ export function FurnitureViewer({
   return (
     <div className="flex flex-col min-h-screen">
 
-      {/* VIEWER */}
       <div className="flex-1 bg-gray-950">
-        <Canvas camera={{ position: [2, 2, 3], fov: 50 }}>
+
+        <Canvas
+          camera={{
+            position: [2, 2, 3],
+            fov: 50,
+          }}
+        >
           <ambientLight intensity={1} />
 
           <directionalLight
@@ -74,6 +104,7 @@ export function FurnitureViewer({
           />
 
           <Suspense fallback={null}>
+
             {furniture.model ? (
               <GLBModel
                 model={furniture.model}
@@ -87,25 +118,39 @@ export function FurnitureViewer({
             )}
 
             <Environment preset="city" />
+
           </Suspense>
 
           <OrbitControls
             enablePan={false}
+            enableDamping
+            dampingFactor={0.05}
             minDistance={1}
             maxDistance={8}
           />
         </Canvas>
+
       </div>
 
-      {/* INFO PANEL */}
       <div className="bg-gray-900 p-6 border-t border-gray-700">
 
         <div className="flex justify-between mb-4">
 
           <div>
-            <h2 className="text-2xl text-white font-bold">
-              {furniture.name}
-            </h2>
+
+            <div className="flex items-center gap-2">
+
+              <h2 className="text-2xl text-white font-bold">
+                {furniture.name}
+              </h2>
+
+              {furniture.model && (
+                <span className="bg-green-600 text-white text-xs px-2 py-1 rounded">
+                  3D Model
+                </span>
+              )}
+
+            </div>
 
             <p className="text-gray-400">
               {furniture.description}
@@ -117,6 +162,7 @@ export function FurnitureViewer({
                 currency: "USD",
               })}
             </p>
+
           </div>
 
           <button

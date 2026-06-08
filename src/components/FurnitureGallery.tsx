@@ -77,10 +77,19 @@ export function FurnitureGallery({
 
                     {/* INFO */}
                     <div className="p-4">
-                      <h3 className="text-lg font-semibold text-white group-hover:text-amber-400 transition-colors">
-                        {furniture.name}
-                      </h3>
+                      <div className="flex items-center justify-between">
 
+                        <h3 className="text-lg font-semibold text-white group-hover:text-amber-400 transition-colors">
+                          {furniture.name}
+                        </h3>
+
+                        {furniture.model && (
+                          <span className="bg-green-600 text-white text-xs px-2 py-1 rounded">
+                            3D
+                          </span>
+                        )}
+
+                      </div>
                       <p className="text-gray-400 text-sm mt-1 line-clamp-2">
                         {furniture.description}
                       </p>
