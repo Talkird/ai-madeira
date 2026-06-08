@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -8,26 +8,25 @@ import type { PlacedItem } from "../data/arPhysics";
 // ===================== MODEL =====================
 function Model({ url }: { url: string }) {
   const { scene } = useGLTF(url);
-  const cloned = useMemo(() => scene.clone(), [scene]);
 
-  const groupRef = useRef<THREE.Group>(null);
+  const cloned = useMemo(() => {
+    const c = scene.clone();
 
-  useEffect(() => {
-    const box = new THREE.Box3().setFromObject(cloned);
+    const box = new THREE.Box3().setFromObject(c);
     const center = new THREE.Vector3();
 
     box.getCenter(center);
 
-    cloned.position.x -= center.x;
-    cloned.position.z -= center.z;
-    cloned.position.y -= box.min.y;
-  }, [cloned]);
+    c.position.set(
+      c.position.x - center.x,
+      c.position.y - box.min.y,
+      c.position.z - center.z
+    );
 
-  return (
-    <group ref={groupRef}>
-      <primitive object={cloned} />
-    </group>
-  );
+    return c;
+  }, [scene]);
+
+  return <primitive object={cloned} />;
 }
 
 // ===================== BOX =====================
@@ -51,8 +50,6 @@ export function ARCamera({
   item,
   scale,
   onExit,
-  placedItems,
-  setPlacedItems,
 }: {
   item: Furniture & { model?: string };
   scale: number;
@@ -62,14 +59,10 @@ export function ARCamera({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [rotationX, setRotationX] = useState(0);
-  const [rotationY, setRotationY] = useState(0);
+  const groupRef = useRef<THREE.Group>(null);
 
-  // 🟢 posición estable
-  const posRef = useRef<[number, number, number]>([0, 0, -2]);
-  const [position, setPosition] = useState<[number, number, number]>([
-    0, 0, -2,
-  ]);
+  const rotation = useRef({ x: 0, y: 0 });
+  const position = useRef<[number, number, number]>([0, 0, -2]);
 
   const dragging = useRef(false);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
@@ -81,14 +74,18 @@ export function ARCamera({
     let stream: MediaStream;
 
     const start = async () => {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false,
-      });
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false,
+        });
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+      } catch (err) {
+        console.error("Camera error:", err);
       }
     };
 
@@ -103,17 +100,18 @@ export function ARCamera({
   // TOUCH
   // =====================
   const onTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      dragging.current = true;
-      lastPointer.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-      };
-    }
+    if (e.touches.length !== 1) return;
+
+    dragging.current = true;
+    lastPointer.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (!dragging.current || !lastPointer.current) return;
+    if (!dragging.current || !lastPointer.current || !groupRef.current)
+      return;
 
     const x = e.touches[0].clientX;
     const y = e.touches[0].clientY;
@@ -123,20 +121,35 @@ export function ARCamera({
 
     lastPointer.current = { x, y };
 
-    // rotación horizontal
-    setRotationY((r) => r + dx * 0.01);
+    // =====================
+    // ROTATION (direct ref → sin re-render)
+    // =====================
+    rotation.current.y += dx * 0.01;
+    rotation.current.x += dy * 0.01;
 
-    // rotación vertical limitada
-    setRotationX((r) =>
-      Math.max(-1.2, Math.min(1.2, r + dy * 0.01))
+    rotation.current.x = Math.max(
+      -1.2,
+      Math.min(1.2, rotation.current.x)
     );
 
-    // movimiento estable sin drift
-    posRef.current[0] += dx * 0.002;
-    posRef.current[2] += dy * 0.002;
-    posRef.current[1] = 0;
+    // =====================
+    // POSITION (physics-lite)
+    // =====================
+    position.current[0] += dx * 0.002;
+    position.current[2] += dy * 0.002;
 
-    setPosition([...posRef.current]);
+    // 🧱 CLAMP (evita perder objeto)
+    position.current[0] = Math.max(-3, Math.min(3, position.current[0]));
+    position.current[2] = Math.max(-6, Math.min(-1, position.current[2]));
+
+    position.current[1] = 0;
+
+    groupRef.current.position.set(...position.current);
+    groupRef.current.rotation.set(
+      rotation.current.x,
+      rotation.current.y,
+      0
+    );
   };
 
   const onTouchEnd = () => {
@@ -145,6 +158,11 @@ export function ARCamera({
   };
 
   const hasModel = !!item.model;
+
+  // =====================
+  // SYNC SCALE (sin state)
+  // =====================
+  const baseScale = scale;
 
   return (
     <div className="absolute inset-0 w-full h-full">
@@ -168,11 +186,7 @@ export function ARCamera({
           <ambientLight intensity={0.8} />
           <directionalLight position={[2, 5, 2]} intensity={1} />
 
-          <group
-            position={position}
-            rotation={[rotationX, rotationY, 0]}
-            scale={scale}
-          >
+          <group ref={groupRef} scale={baseScale}>
             {hasModel ? (
               <Model url={item.model!} />
             ) : (

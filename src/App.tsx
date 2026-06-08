@@ -2,15 +2,11 @@ import { useState } from "react";
 import { furnitureItems } from "./data/furnitureData";
 import { ARCamera } from "./components/ARCamera";
 import type { Furniture } from "./types/furniture";
-import type { PlacedItem } from "./data/arPhysics";
 
 function App() {
   const [selectedItem, setSelectedItem] = useState<Furniture | null>(null);
   const [scale, setScale] = useState(1);
   const [isARMode, setIsARMode] = useState(false);
-
-  // 🧱 ESCENA GLOBAL (FÍSICA SIMPLE)
-  const [placedItems, setPlacedItems] = useState<PlacedItem[]>([]);
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -25,7 +21,7 @@ function App() {
                 AR Furniture Viewer
               </h1>
               <p className="text-gray-300 text-lg">
-                Select furniture and preview it with AR
+                Select furniture and preview it in AR
               </p>
             </div>
 
@@ -36,6 +32,7 @@ function App() {
                   onClick={() => {
                     setSelectedItem(item);
                     setIsARMode(false);
+                    setScale(1); // reset scale al cambiar item
                   }}
                   className="group bg-gray-700 rounded-lg overflow-hidden hover:scale-105 transition"
                 >
@@ -78,13 +75,16 @@ function App() {
                 scale={scale}
                 onExit={() => setIsARMode(false)}
 
-                // 🧱 FÍSICA
-                placedItems={placedItems}
-                setPlacedItems={setPlacedItems}
+                // 🔥 ya no se maneja física desde App
+                placedItems={[]}
+                setPlacedItems={() => {}}
               />
             ) : (
-              <div className="text-white">
-                Preview mode (no camera)
+              <div className="text-white text-center">
+                <p className="text-xl mb-2">Preview mode</p>
+                <p className="text-gray-400">
+                  Enable AR to place furniture in real space
+                </p>
               </div>
             )}
 
@@ -121,25 +121,28 @@ function App() {
             </div>
 
             {/* SCALE */}
-            <input
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.1"
-              value={scale}
-              onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="w-full"
-            />
+            <div className="mb-4">
+              <p className="text-gray-400 mb-2">Scale</p>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={scale}
+                onChange={(e) => setScale(parseFloat(e.target.value))}
+                className="w-full"
+              />
+            </div>
 
             {/* ACTIONS */}
-            <div className="flex gap-4 mt-4">
+            <div className="flex gap-4">
 
               {!isARMode ? (
                 <button
                   onClick={() => setIsARMode(true)}
                   className="flex-1 bg-blue-600 text-white py-3 rounded"
                 >
-                  📱 View AR
+                  📱 Enter AR
                 </button>
               ) : (
                 <button
