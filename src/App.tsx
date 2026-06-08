@@ -10,13 +10,11 @@ type ARMode = "gallery" | "viewer" | "ar";
 function App() {
   const [mode, setMode] = useState<ARMode>("gallery");
 
-  const [selectedItem, setSelectedItem] =
-    useState<Furniture | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Furniture | null>(null);
 
   const [scale, setScale] = useState(1);
 
-  const [placedItems, setPlacedItems] =
-    useState<PlacedItem[]>([]);
+  const [placedItems, setPlacedItems] = useState<PlacedItem[]>([]);
 
   const handleSelectItem = (item: Furniture) => {
     setSelectedItem(item);
@@ -41,13 +39,10 @@ function App() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-
+    <div className="w-full min-h-screen bg-white">
       {/* GALLERY */}
       {mode === "gallery" && (
-        <FurnitureGallery
-          onSelectFurniture={handleSelectItem}
-        />
+        <FurnitureGallery onSelectFurniture={handleSelectItem} />
       )}
 
       {/* VIEWER */}
@@ -71,7 +66,6 @@ function App() {
           setPlacedItems={setPlacedItems}
         />
       )}
-
     </div>
   );
 }

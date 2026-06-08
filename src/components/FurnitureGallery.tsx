@@ -6,12 +6,10 @@ interface FurnitureGalleryProps {
   onSelectFurniture: (furniture: Furniture) => void;
 }
 
-export function FurnitureGallery({
-  onSelectFurniture,
-}: FurnitureGalleryProps) {
+export function FurnitureGallery({ onSelectFurniture }: FurnitureGalleryProps) {
   const categories = useMemo(
     () => [...new Set(furnitureItems.map((item) => item.category))],
-    []
+    [],
   );
 
   const formatPrice = (price: number) =>
@@ -21,15 +19,18 @@ export function FurnitureGallery({
     });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+    <div className="min-h-screen  bg-gray-900">
       {/* HEADER */}
-      <header className="bg-gradient-to-r from-amber-600 to-amber-700 py-8 px-4">
+      <header className="bg-gray-800 py-8 px-4">
         <h1 className="text-4xl font-bold text-white text-center">
-          AR Furniture Viewer
+          Madeira <br />
+          <span className="text-lg md:text-2xl">
+            Visualizador de Muebles en AR
+          </span>
         </h1>
 
-        <p className="text-amber-100 text-center mt-2">
-          Select furniture and preview it in your space
+        <p className="text-amber-300 font-medium text-center mt-2">
+          Selecciona muebles y prévisualízalos en tu espacio
         </p>
       </header>
 
@@ -37,7 +38,7 @@ export function FurnitureGallery({
       <main className="p-6 max-w-7xl mx-auto">
         {categories.map((category) => {
           const categoryItems = furnitureItems.filter(
-            (item) => item.category === category
+            (item) => item.category === category,
           );
 
           return (
@@ -56,30 +57,30 @@ export function FurnitureGallery({
                       bg-gray-700
                       rounded-lg
                       overflow-hidden
+                      hover:scale-[102%]
                       transition-all
-                      duration-300
-                      hover:scale-105
-                      hover:shadow-2xl
+                      duration-200
+                      hover:opacity-75
                       text-left
+                      cursor-pointer
                     "
                   >
                     {/* PREVIEW */}
                     <div className="aspect-square bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center relative overflow-hidden">
                       <div
-                        className="w-20 h-20 rounded-md opacity-80 group-hover:opacity-100 transition-opacity"
+                        className="w-20 h-20 rounded-md opacity-80 transition-opacity"
                         style={{
                           backgroundColor: furniture.color,
                         }}
                       />
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0  transition-opacity" />
                     </div>
 
                     {/* INFO */}
                     <div className="p-4">
                       <div className="flex items-center justify-between">
-
-                        <h3 className="text-lg font-semibold text-white group-hover:text-amber-400 transition-colors">
+                        <h3 className="text-lg font-semibold text-white  transition-colors">
                           {furniture.name}
                         </h3>
 
@@ -88,7 +89,6 @@ export function FurnitureGallery({
                             3D
                           </span>
                         )}
-
                       </div>
                       <p className="text-gray-400 text-sm mt-1 line-clamp-2">
                         {furniture.description}
@@ -96,16 +96,12 @@ export function FurnitureGallery({
 
                       {/* DIMENSIONS */}
                       <div className="mt-3 text-xs text-gray-500">
-                        <span>
-                          W: {furniture.dimensions.width.toFixed(1)}m
-                        </span>
+                        <span>Ancho: {furniture.dimensions.width * 100}cm</span>
+                        {" • "}
+                        <span>Alto: {furniture.dimensions.height * 100}cm</span>
                         {" • "}
                         <span>
-                          H: {furniture.dimensions.height.toFixed(1)}m
-                        </span>
-                        {" • "}
-                        <span>
-                          D: {furniture.dimensions.depth.toFixed(1)}m
+                          Profundidad: {furniture.dimensions.depth * 100}cm
                         </span>
                       </div>
 
@@ -115,8 +111,8 @@ export function FurnitureGallery({
                           {formatPrice(furniture.price)}
                         </span>
 
-                        <span className="text-amber-500 group-hover:text-amber-400 font-semibold text-sm">
-                          View →
+                        <span className="text-amber-500  font-semibold text-sm">
+                          Ver →
                         </span>
                       </div>
                     </div>
@@ -131,8 +127,8 @@ export function FurnitureGallery({
       {/* FOOTER */}
       <footer className="bg-gray-800 border-t border-gray-700 p-6 mt-10">
         <p className="text-gray-400 text-center text-sm">
-          Use AR mode on a mobile device with a camera to visualize furniture in
-          your real environment.
+          Usa el modo AR en un dispositivo móvil con cámara para visualizar los
+          muebles en tu entorno real.
         </p>
       </footer>
     </div>

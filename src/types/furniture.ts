@@ -1,7 +1,7 @@
 export interface Furniture {
   id: string;
   name: string;
-  category: "sofa" | "chair" | "table" | "bed" | "shelf";
+  category: "silla" | "mesa" | "sofa" | "cama";
   description: string;
   dimensions: {
     width: number;
