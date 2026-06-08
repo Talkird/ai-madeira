@@ -66,15 +66,21 @@ export function FurnitureGallery({ onSelectFurniture }: FurnitureGalleryProps) {
                     "
                   >
                     {/* PREVIEW */}
-                    <div className="aspect-square bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center relative overflow-hidden">
-                      <div
-                        className="w-20 h-20 rounded-md opacity-80 transition-opacity"
-                        style={{
-                          backgroundColor: furniture.color,
-                        }}
-                      />
+                    <div className="aspect-square bg-gray-800 flex items-center justify-center relative overflow-hidden">
+                      {furniture.img ? (
+                        <img
+                          src={furniture.img}
+                          alt={furniture.name}
+                          className="w-32 h-32 rounded-md"
+                        />
+                      ) : (
+                        <div
+                          className="w-20 h-20 rounded-md opacity-80"
+                          style={{ backgroundColor: furniture.color }}
+                        />
+                      )}
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0  transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                     </div>
 
                     {/* INFO */}

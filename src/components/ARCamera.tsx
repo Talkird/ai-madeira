@@ -18,11 +18,7 @@ function Model({ url }: { url: string }) {
 
     box.getCenter(center);
 
-    cloned.current.position.set(
-      -center.x,
-      -box.min.y,
-      -center.z
-    );
+    cloned.current.position.set(-center.x, -box.min.y, -center.z);
   }, []);
 
   return <primitive object={cloned.current} />;
@@ -124,21 +120,14 @@ export function ARCamera({
     rotation.current.y += dx * 0.01;
     rotation.current.x += dy * 0.01;
 
-    rotation.current.x = Math.max(
-      -1.2,
-      Math.min(1.2, rotation.current.x)
-    );
+    rotation.current.x = Math.max(-1.2, Math.min(1.2, rotation.current.x));
 
     position.current[0] += dx * 0.002;
     position.current[2] += dy * 0.002;
 
     groupRef.current.position.set(...position.current);
 
-    groupRef.current.rotation.set(
-      rotation.current.x,
-      rotation.current.y,
-      0
-    );
+    groupRef.current.rotation.set(rotation.current.x, rotation.current.y, 0);
   };
 
   const onEnd = () => {
@@ -171,7 +160,6 @@ export function ARCamera({
 
   return (
     <div className="absolute inset-0">
-
       {/* CAMERA */}
       <video
         ref={videoRef}
@@ -194,7 +182,6 @@ export function ARCamera({
         "
       >
         <div className="relative w-12 h-12">
-
           <div
             className="
               absolute
@@ -228,7 +215,6 @@ export function ARCamera({
               border-white/50
             "
           />
-
         </div>
       </div>
 
@@ -242,18 +228,10 @@ export function ARCamera({
         <Canvas camera={{ position: [0, 1.5, 3], fov: 60 }}>
           <ambientLight intensity={0.8} />
 
-          <directionalLight
-            position={[2, 5, 2]}
-          />
+          <directionalLight position={[2, 5, 2]} />
 
-          <group
-            ref={groupRef}
-          >
-            {hasModel ? (
-              <Model url={item.model!} />
-            ) : (
-              <Box item={item} />
-            )}
+          <group ref={groupRef}>
+            {hasModel ? <Model url={item.model!} /> : <Box item={item} />}
           </group>
         </Canvas>
       </div>
@@ -267,13 +245,6 @@ export function ARCamera({
       </button>
 
       {/* PLACE */}
-      <button
-        onClick={addItem}
-        className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded z-30"
-      >
-        Place
-      </button>
-
     </div>
   );
 }
