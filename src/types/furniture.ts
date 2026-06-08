@@ -10,6 +10,7 @@ export interface Furniture {
   };
   color: string;
   price: number;
+  model?: string;
 }
 
 export type ARViewMode = "gallery" | "viewer" | "ar";

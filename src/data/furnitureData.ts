@@ -1,4 +1,7 @@
 import type { Furniture } from "../types/furniture";
+import mesa from "../assets/mesa.glb?url";
+import silla from "../assets/silla.glb?url";
+
 
 export const furnitureItems: Furniture[] = [
   {
@@ -14,19 +17,21 @@ export const furnitureItems: Furniture[] = [
     id: "chair-1",
     name: "Executive Chair",
     category: "chair",
-    description: "Comfortable office chair with ergonomic design",
+    description: "Comfortable office chair",
     dimensions: { width: 0.65, height: 1.05, depth: 0.65 },
     color: "#2D3748",
     price: 450,
+    model: silla,   // 👈 SOLO ESTE TIENE 3D
   },
   {
     id: "table-1",
     name: "Dining Table",
     category: "table",
-    description: "Solid wood dining table for 6 persons",
+    description: "Solid wood dining table",
     dimensions: { width: 1.8, height: 0.75, depth: 0.9 },
     color: "#8B4513",
     price: 800,
+    model: mesa,    // 👈 SOLO ESTE TIENE 3D
   },
   {
     id: "table-2",

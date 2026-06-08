@@ -1,13 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import type { Furniture } from "../types/furniture";
 
 interface Props {
-  item: Furniture;
+  item: Furniture & { modelUrl?: string };
   scale: number;
   onExit: () => void;
 }
 
+// =====================
+// GLB MODEL
+// =====================
+function Model({ url }: { url: string }) {
+  const { scene } = useGLTF(url);
+  return <primitive object={scene} />;
+}
+
+// =====================
+// FALLBACK BOX
+// =====================
 function Box({ item }: { item: Furniture }) {
   return (
     <mesh>
@@ -26,18 +38,23 @@ function Box({ item }: { item: Furniture }) {
 export function ARCamera({ item, scale, onExit }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [position, setPosition] = useState<[number, number, number]>([0, 0, -2]);
+  const [placed, setPlaced] = useState(false);
 
-  // ✅ NEW
+  const [position, setPosition] = useState<[number, number, number]>([
+    0, 0, -2,
+  ]);
+
   const [rotationX, setRotationX] = useState(0);
   const [rotationY, setRotationY] = useState(0);
-
   const [zoom, setZoom] = useState(1);
 
   const dragging = useRef(false);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
   const lastDist = useRef<number | null>(null);
 
+  // =====================
+  // CAMERA
+  // =====================
   useEffect(() => {
     let stream: MediaStream;
 
@@ -60,7 +77,14 @@ export function ARCamera({ item, scale, onExit }: Props) {
     };
   }, []);
 
+  const onPlace = () => setPlaced(true);
+
   const onTouchStart = (e: React.TouchEvent) => {
+    if (!placed) {
+      onPlace();
+      return;
+    }
+
     if (e.touches.length === 1) {
       dragging.current = true;
       lastPointer.current = {
@@ -78,7 +102,8 @@ export function ARCamera({ item, scale, onExit }: Props) {
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    // PINCH
+    if (!placed) return;
+
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -94,7 +119,6 @@ export function ARCamera({ item, scale, onExit }: Props) {
       return;
     }
 
-    // DRAG + ROTATE (IKEA)
     if (!dragging.current || !lastPointer.current) return;
 
     const x = e.touches[0].clientX;
@@ -105,13 +129,8 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
     lastPointer.current = { x, y };
 
-    // ✔ horizontal = Y rotation
     setRotationY((r) => r + dx * 0.01);
-
-    // ✔ vertical = X rotation
-    setRotationX((r) =>
-      Math.max(-1.2, Math.min(1.2, r + dy * 0.01))
-    );
+    setRotationX((r) => Math.max(-1.2, Math.min(1.2, r + dy * 0.01)));
 
     setPosition(([px, py, pz]) => [
       px + dx * 0.002,
@@ -126,9 +145,12 @@ export function ARCamera({ item, scale, onExit }: Props) {
     lastDist.current = null;
   };
 
+  const hasModel = !!item.modelUrl;
+
   return (
     <div className="absolute inset-0 w-full h-full">
 
+      {/* CAMERA */}
       <video
         ref={videoRef}
         autoPlay
@@ -139,20 +161,14 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
       <div className="absolute inset-0 bg-black/10" />
 
+      {/* 3D LAYER */}
       <div
         className="absolute inset-0"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <Canvas
-          className="w-full h-full"
-          gl={{ alpha: true }}
-          camera={{
-            position: [0, 0, 3],
-            fov: 60,
-          }}
-        >
+        <Canvas camera={{ position: [0, 0, 3], fov: 60 }}>
           <ambientLight intensity={0.7} />
           <directionalLight position={[2, 5, 2]} intensity={1} />
 
@@ -161,10 +177,21 @@ export function ARCamera({ item, scale, onExit }: Props) {
             rotation={[rotationX, rotationY, 0]}
             scale={zoom * scale}
           >
-            <Box item={item} />
+            {hasModel ? (
+              <Model url={item.modelUrl!} />
+            ) : (
+              <Box item={item} />
+            )}
           </group>
         </Canvas>
       </div>
+
+      {/* UX */}
+      {!placed && (
+        <div className="absolute inset-0 flex items-center justify-center text-white text-xl">
+          Tap to place object
+        </div>
+      )}
 
       <button
         onClick={onExit}
