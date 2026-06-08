@@ -21,7 +21,7 @@ export const furnitureItems: Furniture[] = [
     dimensions: { width: 0.65, height: 1.05, depth: 0.65 },
     color: "#2D3748",
     price: 450,
-    model: silla,   // 👈 SOLO ESTE TIENE 3D
+    model: silla as string,   // 👈 SOLO ESTE TIENE 3D
   },
   {
     id: "table-1",
@@ -31,7 +31,7 @@ export const furnitureItems: Furniture[] = [
     dimensions: { width: 1.8, height: 0.75, depth: 0.9 },
     color: "#8B4513",
     price: 800,
-    model: mesa,    // 👈 SOLO ESTE TIENE 3D
+    model: mesa as string,    // 👈 SOLO ESTE TIENE 3D
   },
   {
     id: "table-2",

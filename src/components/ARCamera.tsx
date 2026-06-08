@@ -4,7 +4,7 @@ import { useGLTF } from "@react-three/drei";
 import type { Furniture } from "../types/furniture";
 
 interface Props {
-  item: Furniture & { modelUrl?: string };
+  item: Furniture & { model?: string };
   scale: number;
   onExit: () => void;
 }
@@ -37,8 +37,6 @@ function Box({ item }: { item: Furniture }) {
 
 export function ARCamera({ item, scale, onExit }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  const [placed, setPlaced] = useState(false);
 
   const [position, setPosition] = useState<[number, number, number]>([
     0, 0, -2,
@@ -77,14 +75,10 @@ export function ARCamera({ item, scale, onExit }: Props) {
     };
   }, []);
 
-  const onPlace = () => setPlaced(true);
-
+  // =====================
+  // TOUCH START
+  // =====================
   const onTouchStart = (e: React.TouchEvent) => {
-    if (!placed) {
-      onPlace();
-      return;
-    }
-
     if (e.touches.length === 1) {
       dragging.current = true;
       lastPointer.current = {
@@ -101,9 +95,11 @@ export function ARCamera({ item, scale, onExit }: Props) {
     }
   };
 
+  // =====================
+  // TOUCH MOVE
+  // =====================
   const onTouchMove = (e: React.TouchEvent) => {
-    if (!placed) return;
-
+    // PINCH
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -119,6 +115,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
       return;
     }
 
+    // DRAG + ROTATE
     if (!dragging.current || !lastPointer.current) return;
 
     const x = e.touches[0].clientX;
@@ -130,7 +127,9 @@ export function ARCamera({ item, scale, onExit }: Props) {
     lastPointer.current = { x, y };
 
     setRotationY((r) => r + dx * 0.01);
-    setRotationX((r) => Math.max(-1.2, Math.min(1.2, r + dy * 0.01)));
+    setRotationX((r) =>
+      Math.max(-1.2, Math.min(1.2, r + dy * 0.01))
+    );
 
     setPosition(([px, py, pz]) => [
       px + dx * 0.002,
@@ -145,7 +144,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
     lastDist.current = null;
   };
 
-  const hasModel = !!item.modelUrl;
+  const hasModel = !!item.model;
 
   return (
     <div className="absolute inset-0 w-full h-full">
@@ -178,7 +177,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
             scale={zoom * scale}
           >
             {hasModel ? (
-              <Model url={item.modelUrl!} />
+              <Model url={item.model!} />
             ) : (
               <Box item={item} />
             )}
@@ -186,13 +185,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
         </Canvas>
       </div>
 
-      {/* UX */}
-      {!placed && (
-        <div className="absolute inset-0 flex items-center justify-center text-white text-xl">
-          Tap to place object
-        </div>
-      )}
-
+      {/* EXIT */}
       <button
         onClick={onExit}
         className="absolute top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg"
