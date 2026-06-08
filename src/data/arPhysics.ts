@@ -1,82 +1,73 @@
-import type { Furniture } from "../types/furniture";
-
 export type PlacedItem = {
   id: string;
   furnitureId: string;
   position: [number, number, number];
   size: [number, number, number];
+  velocity?: [number, number, number];
 };
 
-export function updatePhysics(
-  items: PlacedItem[]
-): PlacedItem[] {
-  const resolved: PlacedItem[] = [];
-
-  for (let i = 0; i < items.length; i++) {
-    let item = { ...items[i] };
-
-    for (let j = 0; j < items.length; j++) {
-      if (i === j) continue;
-
-      const other = items[j];
-
-      if (intersects(item, other)) {
-        const dx = item.position[0] - other.position[0];
-        const dz = item.position[2] - other.position[2];
-
-        const len = Math.sqrt(dx * dx + dz * dz) || 1;
-        const push = 0.1;
-
-        item = {
-          ...item,
-          position: [
-            item.position[0] + (dx / len) * push,
-            0,
-            item.position[2] + (dz / len) * push,
-          ],
-        };
-      }
-    }
-
-    resolved.push(item);
-  }
-
-  return resolved;
-}
-
-export function intersects(a: PlacedItem, b: PlacedItem) {
+// =====================
+// COLLISION DETECTION
+// =====================
+export function intersects(a: PlacedItem, b: PlacedItem): boolean {
   return (
-    Math.abs(a.position[0] - b.position[0]) < (a.size[0] + b.size[0]) / 2 &&
-    Math.abs(a.position[2] - b.position[2]) < (a.size[2] + b.size[2]) / 2
+    Math.abs(a.position[0] - b.position[0]) <
+      (a.size[0] + b.size[0]) / 2 &&
+    Math.abs(a.position[2] - b.position[2]) <
+      (a.size[2] + b.size[2]) / 2
   );
 }
 
-export function resolveCollision(
-  item: PlacedItem,
-  others: PlacedItem[]
-): [number, number, number] {
-  for (const other of others) {
-    if (other.id === item.id) continue;
+// =====================
+// RESOLVE SINGLE COLLISION
+// =====================
+function resolvePair(a: PlacedItem, b: PlacedItem): PlacedItem {
+  const dx = a.position[0] - b.position[0];
+  const dz = a.position[2] - b.position[2];
 
-    if (intersects(item, other)) {
-      const dx = item.position[0] - other.position[0];
-      const dz = item.position[2] - other.position[2];
+  const dist = Math.sqrt(dx * dx + dz * dz) || 1;
 
-      const len = Math.sqrt(dx * dx + dz * dz) || 1;
+  const minDist = (a.size[0] + b.size[0]) / 2;
+  const overlap = minDist - dist;
 
-      const push = 0.1;
+  if (overlap <= 0) return a;
 
-      return [
-        item.position[0] + (dx / len) * push,
-        0,
-        item.position[2] + (dz / len) * push,
-      ];
+  const push = overlap * 0.5;
+
+  return {
+    ...a,
+    position: [
+      a.position[0] + (dx / dist) * push,
+      0,
+      a.position[2] + (dz / dist) * push,
+    ],
+  };
+}
+
+// =====================
+// PHYSICS STEP
+// =====================
+export function updatePhysics(items: PlacedItem[]): PlacedItem[] {
+  let result = [...items];
+
+  for (let i = 0; i < result.length; i++) {
+    for (let j = 0; j < result.length; j++) {
+      if (i === j) continue;
+
+      if (intersects(result[i], result[j])) {
+        result[i] = resolvePair(result[i], result[j]);
+      }
     }
   }
 
-  return item.position;
+  return result;
 }
 
-export function snapToGround(pos: [number, number, number]) {
-  return [pos[0], 0, pos[2]] as [number, number, number];
+// =====================
+// SNAP TO GROUND
+// =====================
+export function snapToGround(
+  pos: [number, number, number]
+): [number, number, number] {
+  return [pos[0], 0, pos[2]];
 }

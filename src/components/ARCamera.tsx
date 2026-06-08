@@ -51,6 +51,7 @@ export function ARCamera({
   item,
   scale,
   onExit,
+  placedItems,
   setPlacedItems,
 }: {
   item: Furniture & { model?: string };
@@ -98,15 +99,17 @@ export function ARCamera({
   }, []);
 
   // =====================
-  // PHYSICS LOOP (NUEVO)
+  // PHYSICS LOOP (FIX: desacoplado y seguro)
   // =====================
   useEffect(() => {
+    if (placedItems.length === 0) return;
+
     const interval = setInterval(() => {
       setPlacedItems((prev) => updatePhysics(prev));
-    }, 16);
+    }, 50); // más estable que 16ms
 
     return () => clearInterval(interval);
-  }, [setPlacedItems]);
+  }, [placedItems.length, setPlacedItems]);
 
   // =====================
   // TOUCH
@@ -139,7 +142,7 @@ export function ARCamera({
 
     rotation.current.x = Math.max(-1.2, Math.min(1.2, rotation.current.x));
 
-    // POSITION (AR SPACE ARTIFICIAL)
+    // POSITION
     position.current[0] += dx * 0.002;
     position.current[2] += dy * 0.002;
 
@@ -161,16 +164,20 @@ export function ARCamera({
   };
 
   const hasModel = !!item.model;
-  const baseScale = scale;
 
   // =====================
-  // ADD ITEM (NUEVO - base multi objeto)
+  // ADD ITEM (FIX: posición coherente con escena actual)
   // =====================
   const addItem = () => {
+    if (!groupRef.current) return;
+
+    const worldPos = new THREE.Vector3();
+    groupRef.current.getWorldPosition(worldPos);
+
     const newItem: PlacedItem = {
       id: Date.now().toString(),
       furnitureId: item.id,
-      position: [0, 0, -2],
+      position: [worldPos.x, 0, worldPos.z],
       size: [
         item.dimensions.width,
         item.dimensions.height,
@@ -203,8 +210,8 @@ export function ARCamera({
           <ambientLight intensity={0.8} />
           <directionalLight position={[2, 5, 2]} intensity={1} />
 
-          {/* OBJETO ACTUAL */}
-          <group ref={groupRef} scale={baseScale}>
+          {/* OBJETO ACTIVO */}
+          <group ref={groupRef} scale={scale}>
             {hasModel ? (
               <Model url={item.model!} />
             ) : (
