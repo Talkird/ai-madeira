@@ -2,17 +2,54 @@ import { useState } from "react";
 import { furnitureItems } from "./data/furnitureData";
 import { ARCamera } from "./components/ARCamera";
 import type { Furniture } from "./types/furniture";
+import type { PlacedItem } from "./data/arPhysics";
+
+type ARMode = "gallery" | "viewer" | "ar";
 
 function App() {
+  const [mode, setMode] = useState<ARMode>("gallery");
   const [selectedItem, setSelectedItem] = useState<Furniture | null>(null);
   const [scale, setScale] = useState(1);
-  const [isARMode, setIsARMode] = useState(false);
+  const [placedItems, setPlacedItems] = useState<PlacedItem[]>([]);
+
+  // =====================
+  // SELECT ITEM
+  // =====================
+  const handleSelectItem = (item: Furniture) => {
+    setSelectedItem(item);
+    setMode("viewer");
+    setScale(1);
+  };
+
+  // =====================
+  // ENTER AR
+  // =====================
+  const enterAR = () => {
+    if (!selectedItem) return;
+    setMode("ar");
+  };
+
+  // =====================
+  // EXIT AR
+  // =====================
+  const exitAR = () => {
+    setMode("viewer");
+  };
+
+  // =====================
+  // BACK TO GALLERY
+  // =====================
+  const backToGallery = () => {
+    setSelectedItem(null);
+    setMode("gallery");
+    setPlacedItems([]);
+  };
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
 
       {/* ===================== GALLERY ===================== */}
-      {!selectedItem && (
+      {mode === "gallery" && (
         <div className="p-8">
           <div className="max-w-6xl mx-auto">
 
@@ -29,11 +66,7 @@ function App() {
               {furnitureItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    setSelectedItem(item);
-                    setIsARMode(false);
-                    setScale(1); // reset scale al cambiar item
-                  }}
+                  onClick={() => handleSelectItem(item)}
                   className="group bg-gray-700 rounded-lg overflow-hidden hover:scale-105 transition"
                 >
                   <div className="aspect-square bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
@@ -62,32 +95,17 @@ function App() {
         </div>
       )}
 
-      {/* ===================== DETAIL / AR ===================== */}
-      {selectedItem && (
+      {/* ===================== VIEWER ===================== */}
+      {mode === "viewer" && selectedItem && (
         <div className="flex flex-col min-h-screen">
 
-          {/* VIEW AREA */}
-          <div className="flex-1 flex items-center justify-center">
-
-            {isARMode ? (
-              <ARCamera
-                item={selectedItem}
-                scale={scale}
-                onExit={() => setIsARMode(false)}
-
-                // 🔥 ya no se maneja física desde App
-                placedItems={[]}
-                setPlacedItems={() => {}}
-              />
-            ) : (
-              <div className="text-white text-center">
-                <p className="text-xl mb-2">Preview mode</p>
-                <p className="text-gray-400">
-                  Enable AR to place furniture in real space
-                </p>
-              </div>
-            )}
-
+          <div className="flex-1 flex items-center justify-center text-white text-center">
+            <div>
+              <p className="text-xl mb-2">Preview mode</p>
+              <p className="text-gray-400">
+                Enable AR to place furniture in real space
+              </p>
+            </div>
           </div>
 
           {/* CONTROLS */}
@@ -110,10 +128,7 @@ function App() {
               </div>
 
               <button
-                onClick={() => {
-                  setSelectedItem(null);
-                  setIsARMode(false);
-                }}
+                onClick={backToGallery}
                 className="bg-red-600 px-4 py-2 rounded text-white"
               >
                 Back
@@ -137,21 +152,12 @@ function App() {
             {/* ACTIONS */}
             <div className="flex gap-4">
 
-              {!isARMode ? (
-                <button
-                  onClick={() => setIsARMode(true)}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded"
-                >
-                  📱 Enter AR
-                </button>
-              ) : (
-                <button
-                  onClick={() => setIsARMode(false)}
-                  className="flex-1 bg-red-600 text-white py-3 rounded"
-                >
-                  Exit AR
-                </button>
-              )}
+              <button
+                onClick={enterAR}
+                className="flex-1 bg-blue-600 text-white py-3 rounded"
+              >
+                📱 Enter AR
+              </button>
 
               <button className="flex-1 bg-amber-600 text-white py-3 rounded">
                 🛒 Add to Cart
@@ -161,6 +167,17 @@ function App() {
 
           </div>
         </div>
+      )}
+
+      {/* ===================== AR MODE ===================== */}
+      {mode === "ar" && selectedItem && (
+        <ARCamera
+          item={selectedItem}
+          scale={scale}
+          onExit={exitAR}
+          placedItems={placedItems}
+          setPlacedItems={setPlacedItems}
+        />
       )}
 
     </div>

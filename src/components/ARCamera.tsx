@@ -4,6 +4,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
 import type { PlacedItem } from "../data/arPhysics";
+import { updatePhysics } from "../data/arPhysics";
 
 // ===================== MODEL =====================
 function Model({ url }: { url: string }) {
@@ -50,6 +51,7 @@ export function ARCamera({
   item,
   scale,
   onExit,
+  setPlacedItems,
 }: {
   item: Furniture & { model?: string };
   scale: number;
@@ -58,7 +60,6 @@ export function ARCamera({
   setPlacedItems: React.Dispatch<React.SetStateAction<PlacedItem[]>>;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-
   const groupRef = useRef<THREE.Group>(null);
 
   const rotation = useRef({ x: 0, y: 0 });
@@ -97,6 +98,17 @@ export function ARCamera({
   }, []);
 
   // =====================
+  // PHYSICS LOOP (NUEVO)
+  // =====================
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlacedItems((prev) => updatePhysics(prev));
+    }, 16);
+
+    return () => clearInterval(interval);
+  }, [setPlacedItems]);
+
+  // =====================
   // TOUCH
   // =====================
   const onTouchStart = (e: React.TouchEvent) => {
@@ -121,27 +133,18 @@ export function ARCamera({
 
     lastPointer.current = { x, y };
 
-    // =====================
-    // ROTATION (direct ref → sin re-render)
-    // =====================
+    // ROTATION
     rotation.current.y += dx * 0.01;
     rotation.current.x += dy * 0.01;
 
-    rotation.current.x = Math.max(
-      -1.2,
-      Math.min(1.2, rotation.current.x)
-    );
+    rotation.current.x = Math.max(-1.2, Math.min(1.2, rotation.current.x));
 
-    // =====================
-    // POSITION (physics-lite)
-    // =====================
+    // POSITION (AR SPACE ARTIFICIAL)
     position.current[0] += dx * 0.002;
     position.current[2] += dy * 0.002;
 
-    // 🧱 CLAMP (evita perder objeto)
     position.current[0] = Math.max(-3, Math.min(3, position.current[0]));
     position.current[2] = Math.max(-6, Math.min(-1, position.current[2]));
-
     position.current[1] = 0;
 
     groupRef.current.position.set(...position.current);
@@ -158,11 +161,25 @@ export function ARCamera({
   };
 
   const hasModel = !!item.model;
+  const baseScale = scale;
 
   // =====================
-  // SYNC SCALE (sin state)
+  // ADD ITEM (NUEVO - base multi objeto)
   // =====================
-  const baseScale = scale;
+  const addItem = () => {
+    const newItem: PlacedItem = {
+      id: Date.now().toString(),
+      furnitureId: item.id,
+      position: [0, 0, -2],
+      size: [
+        item.dimensions.width,
+        item.dimensions.height,
+        item.dimensions.depth,
+      ],
+    };
+
+    setPlacedItems((prev) => [...prev, newItem]);
+  };
 
   return (
     <div className="absolute inset-0 w-full h-full">
@@ -186,6 +203,7 @@ export function ARCamera({
           <ambientLight intensity={0.8} />
           <directionalLight position={[2, 5, 2]} intensity={1} />
 
+          {/* OBJETO ACTUAL */}
           <group ref={groupRef} scale={baseScale}>
             {hasModel ? (
               <Model url={item.model!} />
@@ -196,11 +214,19 @@ export function ARCamera({
         </Canvas>
       </div>
 
+      {/* UI */}
       <button
         onClick={onExit}
         className="absolute top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg"
       >
         Exit AR
+      </button>
+
+      <button
+        onClick={addItem}
+        className="absolute bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
+      >
+        Place item
       </button>
     </div>
   );

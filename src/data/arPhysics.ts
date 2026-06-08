@@ -2,9 +2,47 @@ import type { Furniture } from "../types/furniture";
 
 export type PlacedItem = {
   id: string;
+  furnitureId: string;
   position: [number, number, number];
   size: [number, number, number];
 };
+
+export function updatePhysics(
+  items: PlacedItem[]
+): PlacedItem[] {
+  const resolved: PlacedItem[] = [];
+
+  for (let i = 0; i < items.length; i++) {
+    let item = { ...items[i] };
+
+    for (let j = 0; j < items.length; j++) {
+      if (i === j) continue;
+
+      const other = items[j];
+
+      if (intersects(item, other)) {
+        const dx = item.position[0] - other.position[0];
+        const dz = item.position[2] - other.position[2];
+
+        const len = Math.sqrt(dx * dx + dz * dz) || 1;
+        const push = 0.1;
+
+        item = {
+          ...item,
+          position: [
+            item.position[0] + (dx / len) * push,
+            0,
+            item.position[2] + (dz / len) * push,
+          ],
+        };
+      }
+    }
+
+    resolved.push(item);
+  }
+
+  return resolved;
+}
 
 export function intersects(a: PlacedItem, b: PlacedItem) {
   return (
