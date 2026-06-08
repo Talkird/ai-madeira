@@ -135,27 +135,6 @@ export function ARCamera({
     last.current = null;
   };
 
-  const addItem = () => {
-    if (!groupRef.current) return;
-
-    const world = new THREE.Vector3();
-
-    groupRef.current.getWorldPosition(world);
-
-    const newItem: PlacedItem = {
-      id: crypto.randomUUID(),
-      furnitureId: item.id,
-      position: [world.x, 0, world.z],
-      size: [
-        item.dimensions.width,
-        item.dimensions.height,
-        item.dimensions.depth,
-      ],
-    };
-
-    setPlacedItems((prev) => [...prev, newItem]);
-  };
-
   const hasModel = !!item.model;
 
   return (
