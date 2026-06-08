@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { furnitureItems } from "./data/furnitureData";
 import { ARCamera } from "./components/ARCamera";
+import type { Furniture } from "./types/furniture";
+import type { PlacedItem } from "./data/arPhysics";
 
 function App() {
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Furniture | null>(null);
   const [scale, setScale] = useState(1);
   const [isARMode, setIsARMode] = useState(false);
 
-  const currentItem = furnitureItems.find(
-    (item) => item.id === selectedItem
-  );
+  // 🧱 ESCENA GLOBAL (FÍSICA SIMPLE)
+  const [placedItems, setPlacedItems] = useState<PlacedItem[]>([]);
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -33,7 +34,7 @@ function App() {
                 <button
                   key={item.id}
                   onClick={() => {
-                    setSelectedItem(item.id);
+                    setSelectedItem(item);
                     setIsARMode(false);
                   }}
                   className="group bg-gray-700 rounded-lg overflow-hidden hover:scale-105 transition"
@@ -49,7 +50,12 @@ function App() {
                     <h3 className="text-white font-semibold">
                       {item.name}
                     </h3>
-                    <p className="text-amber-400">{item.price}</p>
+                    <p className="text-amber-400">
+                      {item.price.toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                      })}
+                    </p>
                   </div>
                 </button>
               ))}
@@ -60,7 +66,7 @@ function App() {
       )}
 
       {/* ===================== DETAIL / AR ===================== */}
-      {selectedItem && currentItem && (
+      {selectedItem && (
         <div className="flex flex-col min-h-screen">
 
           {/* VIEW AREA */}
@@ -68,9 +74,13 @@ function App() {
 
             {isARMode ? (
               <ARCamera
-                item={currentItem}
+                item={selectedItem}
                 scale={scale}
                 onExit={() => setIsARMode(false)}
+
+                // 🧱 FÍSICA
+                placedItems={placedItems}
+                setPlacedItems={setPlacedItems}
               />
             ) : (
               <div className="text-white">
@@ -86,13 +96,16 @@ function App() {
             <div className="flex justify-between mb-4">
               <div>
                 <h2 className="text-2xl text-white font-bold">
-                  {currentItem.name}
+                  {selectedItem.name}
                 </h2>
                 <p className="text-gray-400">
-                  {currentItem.description}
+                  {selectedItem.description}
                 </p>
                 <p className="text-amber-400 text-xl">
-                  {currentItem.price}
+                  {selectedItem.price.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  })}
                 </p>
               </div>
 

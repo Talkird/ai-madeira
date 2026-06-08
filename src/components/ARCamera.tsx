@@ -1,33 +1,31 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
+import type { PlacedItem } from "../data/arPhysics";
 
 // ===================== MODEL =====================
 function Model({ url }: { url: string }) {
   const { scene } = useGLTF(url);
+  const cloned = useMemo(() => scene.clone(), [scene]);
+
   const groupRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
-    if (!groupRef.current) return;
-
-    const box = new THREE.Box3().setFromObject(scene);
+    const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
 
     box.getCenter(center);
 
-    // centrar en XZ
-    scene.position.x -= center.x;
-    scene.position.z -= center.z;
-
-    // 🔥 ANCLA AL SUELO
-    scene.position.y -= box.min.y;
-  }, [scene]);
+    cloned.position.x -= center.x;
+    cloned.position.z -= center.z;
+    cloned.position.y -= box.min.y;
+  }, [cloned]);
 
   return (
     <group ref={groupRef}>
-      <primitive object={scene} />
+      <primitive object={cloned} />
     </group>
   );
 }
@@ -53,28 +51,28 @@ export function ARCamera({
   item,
   scale,
   onExit,
+  placedItems,
+  setPlacedItems,
 }: {
   item: Furniture & { model?: string };
   scale: number;
   onExit: () => void;
+  placedItems: PlacedItem[];
+  setPlacedItems: React.Dispatch<React.SetStateAction<PlacedItem[]>>;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [rotationX, setRotationX] = useState(0);
   const [rotationY, setRotationY] = useState(0);
 
-  const [zoom, setZoom] = useState(1);
-
-  // 🟢 PISO FIJO (clave IKEA)
+  // 🟢 posición estable
+  const posRef = useRef<[number, number, number]>([0, 0, -2]);
   const [position, setPosition] = useState<[number, number, number]>([
-    0,
-    0,
-    -2,
+    0, 0, -2,
   ]);
 
   const dragging = useRef(false);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
-  const lastDist = useRef<number | null>(null);
 
   // =====================
   // CAMERA
@@ -112,32 +110,9 @@ export function ARCamera({
         y: e.touches[0].clientY,
       };
     }
-
-    if (e.touches.length === 2) {
-      dragging.current = false;
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      lastDist.current = Math.sqrt(dx * dx + dy * dy);
-    }
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    // pinch zoom
-    if (e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (lastDist.current !== null) {
-        const diff = dist - lastDist.current;
-        setZoom((z) => Math.max(0.5, Math.min(3, z + diff * 0.005)));
-      }
-
-      lastDist.current = dist;
-      return;
-    }
-
     if (!dragging.current || !lastPointer.current) return;
 
     const x = e.touches[0].clientX;
@@ -148,27 +123,25 @@ export function ARCamera({
 
     lastPointer.current = { x, y };
 
-    // horizontal rotation
+    // rotación horizontal
     setRotationY((r) => r + dx * 0.01);
 
-    // vertical rotation (limitado estilo IKEA)
+    // rotación vertical limitada
     setRotationX((r) =>
       Math.max(-1.2, Math.min(1.2, r + dy * 0.01))
     );
 
-    // 🟢 IMPORTANTE: eliminamos “flotación libre”
-    // solo leve ajuste horizontal
-    setPosition(([px, pz]) => [
-      px + dx * 0.002,
-      0, // 🔥 SIEMPRE EN EL PISO
-      pz,
-    ]);
+    // movimiento estable sin drift
+    posRef.current[0] += dx * 0.002;
+    posRef.current[2] += dy * 0.002;
+    posRef.current[1] = 0;
+
+    setPosition([...posRef.current]);
   };
 
   const onTouchEnd = () => {
     dragging.current = false;
     lastPointer.current = null;
-    lastDist.current = null;
   };
 
   const hasModel = !!item.model;
@@ -198,7 +171,7 @@ export function ARCamera({
           <group
             position={position}
             rotation={[rotationX, rotationY, 0]}
-            scale={zoom * scale}
+            scale={scale}
           >
             {hasModel ? (
               <Model url={item.model!} />
