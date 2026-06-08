@@ -4,7 +4,7 @@ import { OrbitControls, Environment, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
 
-function GLBModel({ model, scale }: { model: string; scale: number }) {
+function GLBModel({ model }: { model: string }) {
   const { scene } = useGLTF(model);
 
   const cloned = useRef(scene.clone());
@@ -19,18 +19,16 @@ function GLBModel({ model, scale }: { model: string; scale: number }) {
     cloned.current.position.set(-center.x, -box.min.y, -center.z);
   }, []);
 
-  return <primitive object={cloned.current} scale={scale} />;
+  return <primitive object={cloned.current} />;
 }
 
 function FallbackFurniture({
   furniture,
-  scale,
 }: {
   furniture: Furniture;
-  scale: number;
 }) {
   return (
-    <mesh scale={scale} position={[0, furniture.dimensions.height / 2, 0]}>
+    <mesh position={[0, furniture.dimensions.height / 2, 0]}>
       <boxGeometry
         args={[
           furniture.dimensions.width,
@@ -46,16 +44,12 @@ function FallbackFurniture({
 
 interface FurnitureViewerProps {
   furniture: Furniture;
-  scale: number;
-  onScaleChange: (value: number) => void;
   onBack: () => void;
   onEnterAR: () => void;
 }
 
 export function FurnitureViewer({
   furniture,
-  scale,
-  onScaleChange,
   onBack,
   onEnterAR,
 }: FurnitureViewerProps) {
@@ -74,9 +68,9 @@ export function FurnitureViewer({
 
           <Suspense fallback={null}>
             {furniture.model ? (
-              <GLBModel model={furniture.model} scale={scale} />
+              <GLBModel model={furniture.model} />
             ) : (
-              <FallbackFurniture furniture={furniture} scale={scale} />
+              <FallbackFurniture furniture={furniture} />
             )}
 
             <Environment preset="city" />

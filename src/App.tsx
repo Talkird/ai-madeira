@@ -12,14 +12,11 @@ function App() {
 
   const [selectedItem, setSelectedItem] = useState<Furniture | null>(null);
 
-  const [scale, setScale] = useState(1);
-
   const [placedItems, setPlacedItems] = useState<PlacedItem[]>([]);
 
   const handleSelectItem = (item: Furniture) => {
     setSelectedItem(item);
     setMode("viewer");
-    setScale(1);
   };
 
   const enterAR = () => {
@@ -35,7 +32,6 @@ function App() {
     setSelectedItem(null);
     setMode("gallery");
     setPlacedItems([]);
-    setScale(1);
   };
 
   return (
@@ -49,8 +45,6 @@ function App() {
       {mode === "viewer" && selectedItem && (
         <FurnitureViewer
           furniture={selectedItem}
-          scale={scale}
-          onScaleChange={setScale}
           onBack={backToGallery}
           onEnterAR={enterAR}
         />
@@ -60,7 +54,6 @@ function App() {
       {mode === "ar" && selectedItem && (
         <ARCamera
           item={selectedItem}
-          scale={scale}
           onExit={exitAR}
           placedItems={placedItems}
           setPlacedItems={setPlacedItems}

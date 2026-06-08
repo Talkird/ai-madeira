@@ -47,13 +47,11 @@ function Box({ item }: { item: Furniture }) {
 // ================= AR CAMERA =================
 export function ARCamera({
   item,
-  scale,
   onExit,
   placedItems,
   setPlacedItems,
 }: {
   item: Furniture & { model?: string };
-  scale: number;
   onExit: () => void;
   placedItems: PlacedItem[];
   setPlacedItems: React.Dispatch<React.SetStateAction<PlacedItem[]>>;
@@ -250,7 +248,6 @@ export function ARCamera({
 
           <group
             ref={groupRef}
-            scale={scale}
           >
             {hasModel ? (
               <Model url={item.model!} />
