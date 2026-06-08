@@ -3,12 +3,9 @@ export type PlacedItem = {
   furnitureId: string;
   position: [number, number, number];
   size: [number, number, number];
-  velocity?: [number, number, number];
 };
 
-// =====================
-// COLLISION DETECTION
-// =====================
+// ================= COLLISION =================
 export function intersects(a: PlacedItem, b: PlacedItem): boolean {
   return (
     Math.abs(a.position[0] - b.position[0]) <
@@ -18,14 +15,12 @@ export function intersects(a: PlacedItem, b: PlacedItem): boolean {
   );
 }
 
-// =====================
-// RESOLVE SINGLE COLLISION
-// =====================
-function resolvePair(a: PlacedItem, b: PlacedItem): PlacedItem {
+// ================= RESOLVE =================
+function resolve(a: PlacedItem, b: PlacedItem): PlacedItem {
   const dx = a.position[0] - b.position[0];
   const dz = a.position[2] - b.position[2];
 
-  const dist = Math.sqrt(dx * dx + dz * dz) || 1;
+  const dist = Math.sqrt(dx * dx + dz * dz) || 0.0001;
 
   const minDist = (a.size[0] + b.size[0]) / 2;
   const overlap = minDist - dist;
@@ -44,30 +39,17 @@ function resolvePair(a: PlacedItem, b: PlacedItem): PlacedItem {
   };
 }
 
-// =====================
-// PHYSICS STEP
-// =====================
+// ================= UPDATE =================
 export function updatePhysics(items: PlacedItem[]): PlacedItem[] {
-  let result = [...items];
+  const next = [...items];
 
-  for (let i = 0; i < result.length; i++) {
-    for (let j = 0; j < result.length; j++) {
-      if (i === j) continue;
-
-      if (intersects(result[i], result[j])) {
-        result[i] = resolvePair(result[i], result[j]);
+  for (let i = 0; i < next.length; i++) {
+    for (let j = i + 1; j < next.length; j++) {
+      if (intersects(next[i], next[j])) {
+        next[i] = resolve(next[i], next[j]);
       }
     }
   }
 
-  return result;
-}
-
-// =====================
-// SNAP TO GROUND
-// =====================
-export function snapToGround(
-  pos: [number, number, number]
-): [number, number, number] {
-  return [pos[0], 0, pos[2]];
+  return next;
 }

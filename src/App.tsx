@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { furnitureItems } from "./data/furnitureData";
 import { ARCamera } from "./components/ARCamera";
+import { FurnitureGallery } from "./components/FurnitureGallery";
 import type { Furniture } from "./types/furniture";
 import type { PlacedItem } from "./data/arPhysics";
 
-type ARMode = "gallery" | "ar";
+type ARMode = "gallery" | "viewer" | "ar";
 
 function App() {
   const [mode, setMode] = useState<ARMode>("gallery");
@@ -12,105 +12,152 @@ function App() {
   const [scale, setScale] = useState(1);
   const [placedItems, setPlacedItems] = useState<PlacedItem[]>([]);
 
-  // =====================
-  // SELECT ITEM
-  // =====================
   const handleSelectItem = (item: Furniture) => {
     setSelectedItem(item);
+    setMode("viewer");
     setScale(1);
   };
 
-  // =====================
-  // ENTER AR
-  // =====================
   const enterAR = () => {
     if (!selectedItem) return;
     setMode("ar");
   };
 
-  // =====================
-  // EXIT AR
-  // =====================
   const exitAR = () => {
-    setMode("gallery");
+    setMode("viewer");
   };
 
-  // =====================
-  // RESET APP STATE
-  // =====================
-  const resetApp = () => {
+  const backToGallery = () => {
     setSelectedItem(null);
     setMode("gallery");
     setPlacedItems([]);
+    setScale(1);
   };
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
 
-      {/* ===================== GALLERY ===================== */}
+      {/* ================= GALLERY ================= */}
       {mode === "gallery" && (
-        <div className="p-8">
-          <div className="max-w-6xl mx-auto">
+        <FurnitureGallery
+          onSelectFurniture={handleSelectItem}
+        />
+      )}
 
-            <div className="mb-12 text-center">
-              <h1 className="text-5xl font-bold text-white mb-2">
-                AR Furniture Viewer
-              </h1>
-              <p className="text-gray-300 text-lg">
-                Select furniture and preview it in AR
+      {/* ================= VIEWER ================= */}
+      {mode === "viewer" && selectedItem && (
+        <div className="flex flex-col min-h-screen">
+
+          {/* PREVIEW */}
+          <div className="flex-1 flex items-center justify-center text-white">
+            <div className="text-center">
+
+              <div
+                className="mx-auto rounded-lg shadow-2xl mb-6"
+                style={{
+                  width: 180,
+                  height: 180,
+                  backgroundColor: selectedItem.color,
+                }}
+              />
+
+              <h3 className="text-2xl font-bold mb-2">
+                {selectedItem.name}
+              </h3>
+
+              <p className="text-gray-400 mb-4">
+                {selectedItem.model
+                  ? "This furniture includes a 3D model."
+                  : "This furniture uses a generated preview."}
               </p>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {furnitureItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelectItem(item)}
-                  className="group bg-gray-700 rounded-lg overflow-hidden hover:scale-105 transition"
-                >
-                  <div className="aspect-square bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center">
-                    <div
-                      className="w-24 h-24 rounded-md"
-                      style={{ backgroundColor: item.color }}
-                    />
-                  </div>
-
-                  <div className="p-4">
-                    <h3 className="text-white font-semibold">
-                      {item.name}
-                    </h3>
-                    <p className="text-amber-400">
-                      {item.price.toLocaleString("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      })}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* ===================== ACTION PANEL ===================== */}
-            {selectedItem && (
-              <div className="mt-10 text-center">
-                <p className="text-white mb-2">
-                  Selected: {selectedItem.name}
+              <div className="text-sm text-gray-500 space-y-1">
+                <p>
+                  Width: {selectedItem.dimensions.width}m
                 </p>
 
-                <button
-                  onClick={enterAR}
-                  className="bg-blue-600 text-white px-6 py-3 rounded"
-                >
-                  📱 Enter AR
-                </button>
+                <p>
+                  Height: {selectedItem.dimensions.height}m
+                </p>
+
+                <p>
+                  Depth: {selectedItem.dimensions.depth}m
+                </p>
               </div>
-            )}
+
+            </div>
+          </div>
+
+          {/* CONTROLS */}
+          <div className="bg-gray-900 p-6 border-t border-gray-700">
+
+            <div className="flex justify-between mb-4">
+              <div>
+                <h2 className="text-2xl text-white font-bold">
+                  {selectedItem.name}
+                </h2>
+
+                <p className="text-gray-400">
+                  {selectedItem.description}
+                </p>
+
+                <p className="text-amber-400 text-xl">
+                  {selectedItem.price.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  })}
+                </p>
+              </div>
+
+              <button
+                onClick={backToGallery}
+                className="bg-red-600 px-4 py-2 rounded text-white hover:bg-red-700 transition"
+              >
+                Back
+              </button>
+            </div>
+
+            {/* SCALE */}
+            <div className="mb-4">
+              <p className="text-gray-400 mb-2">
+                Scale ({scale.toFixed(1)}x)
+              </p>
+
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={scale}
+                onChange={(e) => setScale(parseFloat(e.target.value))}
+                className="w-full"
+              />
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex gap-4">
+
+              <button
+                onClick={enterAR}
+                className="flex-1 bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition"
+              >
+                Enter AR
+              </button>
+
+              <button
+                disabled
+                className="flex-1 bg-gray-600 text-white py-3 rounded opacity-60 cursor-not-allowed"
+              >
+                Add to Cart
+              </button>
+
+            </div>
 
           </div>
         </div>
       )}
 
-      {/* ===================== AR MODE ===================== */}
+      {/* ================= AR ================= */}
       {mode === "ar" && selectedItem && (
         <ARCamera
           item={selectedItem}
