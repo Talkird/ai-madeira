@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
+import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
 
 interface Props {
@@ -10,11 +11,48 @@ interface Props {
 }
 
 // =====================
-// GLB MODEL
+// GLB MODEL WITH AUTO SCALE + CENTER + FLOOR ALIGN
 // =====================
 function Model({ url }: { url: string }) {
   const { scene } = useGLTF(url);
-  return <primitive object={scene} />;
+
+  const group = useRef<THREE.Group>(null);
+
+  useEffect(() => {
+    if (!group.current) return;
+
+    // =====================
+    // 1. CENTER MODEL
+    // =====================
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+
+    box.getSize(size);
+    box.getCenter(center);
+
+    scene.position.x -= center.x;
+    scene.position.y -= center.y;
+    scene.position.z -= center.z;
+
+    // =====================
+    // 2. AUTO SCALE (normalize to ~1 unit)
+    // =====================
+    const maxAxis = Math.max(size.x, size.y, size.z);
+    const scaleFactor = 1 / maxAxis;
+
+    scene.scale.setScalar(scaleFactor);
+
+    // =====================
+    // 3. FLOOR ALIGN (push to Y=0)
+    // =====================
+    const box2 = new THREE.Box3().setFromObject(scene);
+    const minY = box2.min.y;
+
+    scene.position.y -= minY;
+  }, [scene]);
+
+  return <primitive ref={group} object={scene} />;
 }
 
 // =====================
@@ -22,7 +60,7 @@ function Model({ url }: { url: string }) {
 // =====================
 function Box({ item }: { item: Furniture }) {
   return (
-    <mesh>
+    <mesh position={[0, 0, 0]}>
       <boxGeometry
         args={[
           item.dimensions.width,
@@ -35,6 +73,9 @@ function Box({ item }: { item: Furniture }) {
   );
 }
 
+// =====================
+// MAIN COMPONENT
+// =====================
 export function ARCamera({ item, scale, onExit }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -96,10 +137,9 @@ export function ARCamera({ item, scale, onExit }: Props) {
   };
 
   // =====================
-  // TOUCH MOVE
+  // TOUCH MOVE (IKEA CONTROLS)
   // =====================
   const onTouchMove = (e: React.TouchEvent) => {
-    // PINCH
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -115,7 +155,6 @@ export function ARCamera({ item, scale, onExit }: Props) {
       return;
     }
 
-    // DRAG + ROTATE
     if (!dragging.current || !lastPointer.current) return;
 
     const x = e.touches[0].clientX;
@@ -127,9 +166,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
     lastPointer.current = { x, y };
 
     setRotationY((r) => r + dx * 0.01);
-    setRotationX((r) =>
-      Math.max(-1.2, Math.min(1.2, r + dy * 0.01))
-    );
+    setRotationX((r) => Math.max(-1.2, Math.min(1.2, r + dy * 0.01)));
 
     setPosition(([px, py, pz]) => [
       px + dx * 0.002,
@@ -171,6 +208,17 @@ export function ARCamera({ item, scale, onExit }: Props) {
           <ambientLight intensity={0.7} />
           <directionalLight position={[2, 5, 2]} intensity={1} />
 
+          {/* =====================
+              FLOOR (visual anchor reference)
+          ===================== */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
+            <planeGeometry args={[20, 20]} />
+            <meshStandardMaterial transparent opacity={0} />
+          </mesh>
+
+          {/* =====================
+              OBJECT
+          ===================== */}
           <group
             position={position}
             rotation={[rotationX, rotationY, 0]}
