@@ -1,41 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { useGLTF} from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
 
-interface Props {
-  item: Furniture & { model?: string };
-  scale: number;
-  onExit: () => void;
-}
-
-// =====================
-// GLB MODEL (AUTO CENTER + FLOOR ALIGN)
-// =====================
+// ===================== MODEL =====================
 function Model({ url }: { url: string }) {
   const { scene } = useGLTF(url);
-
   const groupRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
     if (!groupRef.current) return;
 
-    // 🔥 calcular bounding box real del modelo
     const box = new THREE.Box3().setFromObject(scene);
-    const size = new THREE.Vector3();
     const center = new THREE.Vector3();
 
-    box.getSize(size);
     box.getCenter(center);
 
-    // 👉 centrar modelo
+    // centrar en XZ
     scene.position.x -= center.x;
     scene.position.z -= center.z;
 
-    // 👉 apoyar en el suelo (Y=0)
+    // 🔥 ANCLA AL SUELO
     scene.position.y -= box.min.y;
-
   }, [scene]);
 
   return (
@@ -45,9 +32,7 @@ function Model({ url }: { url: string }) {
   );
 }
 
-// =====================
-// FALLBACK BOX
-// =====================
+// ===================== BOX =====================
 function Box({ item }: { item: Furniture }) {
   return (
     <mesh position={[0, item.dimensions.height / 2, 0]}>
@@ -63,16 +48,29 @@ function Box({ item }: { item: Furniture }) {
   );
 }
 
-export function ARCamera({ item, scale, onExit }: Props) {
+// ===================== CAMERA =====================
+export function ARCamera({
+  item,
+  scale,
+  onExit,
+}: {
+  item: Furniture & { model?: string };
+  scale: number;
+  onExit: () => void;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  const [position, setPosition] = useState<[number, number, number]>([
-    0, 0, -2,
-  ]);
 
   const [rotationX, setRotationX] = useState(0);
   const [rotationY, setRotationY] = useState(0);
+
   const [zoom, setZoom] = useState(1);
+
+  // 🟢 PISO FIJO (clave IKEA)
+  const [position, setPosition] = useState<[number, number, number]>([
+    0,
+    0,
+    -2,
+  ]);
 
   const dragging = useRef(false);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
@@ -124,6 +122,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
+    // pinch zoom
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -149,14 +148,19 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
     lastPointer.current = { x, y };
 
+    // horizontal rotation
     setRotationY((r) => r + dx * 0.01);
+
+    // vertical rotation (limitado estilo IKEA)
     setRotationX((r) =>
       Math.max(-1.2, Math.min(1.2, r + dy * 0.01))
     );
 
-    setPosition(([px, py, pz]) => [
+    // 🟢 IMPORTANTE: eliminamos “flotación libre”
+    // solo leve ajuste horizontal
+    setPosition(([px, pz]) => [
       px + dx * 0.002,
-      py - dy * 0.002,
+      0, // 🔥 SIEMPRE EN EL PISO
       pz,
     ]);
   };
@@ -171,8 +175,6 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
   return (
     <div className="absolute inset-0 w-full h-full">
-
-      {/* CAMERA */}
       <video
         ref={videoRef}
         autoPlay
@@ -183,7 +185,6 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
       <div className="absolute inset-0 bg-black/10" />
 
-      {/* 3D LAYER */}
       <div
         className="absolute inset-0"
         onTouchStart={onTouchStart}
@@ -208,7 +209,6 @@ export function ARCamera({ item, scale, onExit }: Props) {
         </Canvas>
       </div>
 
-      {/* EXIT */}
       <button
         onClick={onExit}
         className="absolute top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg"
