@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { useGLTF, Bounds } from "@react-three/drei";
+import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
 
 interface Props {
@@ -10,11 +11,38 @@ interface Props {
 }
 
 // =====================
-// GLB MODEL
+// GLB MODEL (AUTO CENTER + FLOOR ALIGN)
 // =====================
 function Model({ url }: { url: string }) {
   const { scene } = useGLTF(url);
-  return <primitive object={scene} />;
+
+  const groupRef = useRef<THREE.Group>(null);
+
+  useEffect(() => {
+    if (!groupRef.current) return;
+
+    // 🔥 calcular bounding box real del modelo
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+
+    box.getSize(size);
+    box.getCenter(center);
+
+    // 👉 centrar modelo
+    scene.position.x -= center.x;
+    scene.position.z -= center.z;
+
+    // 👉 apoyar en el suelo (Y=0)
+    scene.position.y -= box.min.y;
+
+  }, [scene]);
+
+  return (
+    <group ref={groupRef}>
+      <primitive object={scene} />
+    </group>
+  );
 }
 
 // =====================
@@ -22,7 +50,7 @@ function Model({ url }: { url: string }) {
 // =====================
 function Box({ item }: { item: Furniture }) {
   return (
-    <mesh>
+    <mesh position={[0, item.dimensions.height / 2, 0]}>
       <boxGeometry
         args={[
           item.dimensions.width,
@@ -76,7 +104,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
   }, []);
 
   // =====================
-  // TOUCH START
+  // TOUCH
   // =====================
   const onTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
@@ -95,11 +123,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
     }
   };
 
-  // =====================
-  // TOUCH MOVE
-  // =====================
   const onTouchMove = (e: React.TouchEvent) => {
-    // PINCH
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -115,7 +139,6 @@ export function ARCamera({ item, scale, onExit }: Props) {
       return;
     }
 
-    // DRAG + ROTATE
     if (!dragging.current || !lastPointer.current) return;
 
     const x = e.touches[0].clientX;
@@ -167,8 +190,8 @@ export function ARCamera({ item, scale, onExit }: Props) {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <Canvas camera={{ position: [0, 0, 3], fov: 60 }}>
-          <ambientLight intensity={0.7} />
+        <Canvas camera={{ position: [0, 1.5, 3], fov: 60 }}>
+          <ambientLight intensity={0.8} />
           <directionalLight position={[2, 5, 2]} intensity={1} />
 
           <group
