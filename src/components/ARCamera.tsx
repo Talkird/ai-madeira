@@ -6,7 +6,7 @@ import type { Furniture } from "../types/furniture";
 import type { PlacedItem } from "../data/arPhysics";
 import { updatePhysics } from "../data/arPhysics";
 
-// ================= MODEL =================
+// ================= MODEL ================
 function Model({ url }: { url: string }) {
   const { scene } = useGLTF(url);
 
