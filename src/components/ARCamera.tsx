@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { useGLTF, Bounds } from "@react-three/drei";
+import { useGLTF} from "@react-three/drei";
 import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
 
