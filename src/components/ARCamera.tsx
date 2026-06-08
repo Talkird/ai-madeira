@@ -27,7 +27,11 @@ export function ARCamera({ item, scale, onExit }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [position, setPosition] = useState<[number, number, number]>([0, 0, -2]);
-  const [rotation, setRotation] = useState(0);
+
+  // ✅ NEW
+  const [rotationX, setRotationX] = useState(0);
+  const [rotationY, setRotationY] = useState(0);
+
   const [zoom, setZoom] = useState(1);
 
   const dragging = useRef(false);
@@ -90,7 +94,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
       return;
     }
 
-    // DRAG + ROTATE
+    // DRAG + ROTATE (IKEA)
     if (!dragging.current || !lastPointer.current) return;
 
     const x = e.touches[0].clientX;
@@ -101,7 +105,13 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
     lastPointer.current = { x, y };
 
-    setRotation((r) => r + dx * 0.01);
+    // ✔ horizontal = Y rotation
+    setRotationY((r) => r + dx * 0.01);
+
+    // ✔ vertical = X rotation
+    setRotationX((r) =>
+      Math.max(-1.2, Math.min(1.2, r + dy * 0.01))
+    );
 
     setPosition(([px, py, pz]) => [
       px + dx * 0.002,
@@ -119,7 +129,6 @@ export function ARCamera({ item, scale, onExit }: Props) {
   return (
     <div className="absolute inset-0 w-full h-full">
 
-      {/* CAMERA */}
       <video
         ref={videoRef}
         autoPlay
@@ -130,7 +139,6 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
       <div className="absolute inset-0 bg-black/10" />
 
-      {/* 3D OVERLAY */}
       <div
         className="absolute inset-0"
         onTouchStart={onTouchStart}
@@ -150,7 +158,7 @@ export function ARCamera({ item, scale, onExit }: Props) {
 
           <group
             position={position}
-            rotation={[0, rotation, 0]}
+            rotation={[rotationX, rotationY, 0]}
             scale={zoom * scale}
           >
             <Box item={item} />
@@ -158,7 +166,6 @@ export function ARCamera({ item, scale, onExit }: Props) {
         </Canvas>
       </div>
 
-      {/* EXIT */}
       <button
         onClick={onExit}
         className="absolute top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-lg"
