@@ -21,7 +21,6 @@ import type { Furniture } from "../types/furniture";
 
 // ─── SHARED ──────────────────────────────────────────────────────────────────
 
-const xrStore = createXRStore();
 const matrixHelper = new THREE.Matrix4();
 
 interface PlacedARItem {
@@ -327,6 +326,8 @@ function SessionStateBridge({ onSessionChange }: { onSessionChange: (active: boo
 }
 
 function ARCameraWebXR({ item, onExit }: { item: Furniture; onExit: () => void }) {
+  const [xrStore] = useState(() => createXRStore());
+  const [arStarted, setArStarted] = useState(false);
   const [isInAR, setIsInAR] = useState(false);
   const [hasFoundSurface, setHasFoundSurface] = useState(false);
   const [placedItems, setPlacedItems] = useState<PlacedARItem[]>([]);
@@ -356,39 +357,52 @@ function ARCameraWebXR({ item, onExit }: { item: Furniture; onExit: () => void }
     ]);
   }, []);
 
+  const handleStartAR = useCallback(() => {
+    setArStarted(true);
+    // enterAR is called after the Canvas/XR has mounted (see effect below)
+  }, []);
+
+  useEffect(() => {
+    if (arStarted) {
+      xrStore.enterAR();
+    }
+  }, [arStarted, xrStore]);
+
   return (
     <div className="absolute inset-0 bg-black">
-      <Canvas gl={{ alpha: true, antialias: true }}>
-        <XR store={xrStore}>
-          <SessionStateBridge onSessionChange={handleSessionChange} />
-          <IfInSessionMode allow="immersive-ar">
-            <ambientLight intensity={1.5} />
-            <directionalLight position={[2, 5, 2]} intensity={1} />
-            <HitTestScene
-              item={item}
-              hitPositionRef={hitPositionRef}
-              pendingRef={pendingRef}
-              onFirstHit={() => setHasFoundSurface(true)}
-              placedItems={placedItems}
-            />
-            <XRDomOverlay>
-              <ControlsOverlay
-                hasHit={hasFoundSurface}
-                placedCount={placedItems.length}
-                itemName={item.name}
-                onExit={onExit}
-                onPlace={placeItem}
-                onRotateLeft={() => setPendingRotation((r) => r - Math.PI / 8)}
-                onRotateRight={() => setPendingRotation((r) => r + Math.PI / 8)}
-                onScaleDown={() => setPendingScale((s) => Math.max(s * 0.8, 0.1))}
-                onScaleUp={() => setPendingScale((s) => Math.min(s * 1.25, 5))}
-                onClearAll={() => setPlacedItems([])}
-                hint="Apuntá al suelo para detectar superficies"
+      {arStarted && (
+        <Canvas gl={{ alpha: true, antialias: true }}>
+          <XR store={xrStore}>
+            <SessionStateBridge onSessionChange={handleSessionChange} />
+            <IfInSessionMode allow="immersive-ar">
+              <ambientLight intensity={1.5} />
+              <directionalLight position={[2, 5, 2]} intensity={1} />
+              <HitTestScene
+                item={item}
+                hitPositionRef={hitPositionRef}
+                pendingRef={pendingRef}
+                onFirstHit={() => setHasFoundSurface(true)}
+                placedItems={placedItems}
               />
-            </XRDomOverlay>
-          </IfInSessionMode>
-        </XR>
-      </Canvas>
+              <XRDomOverlay>
+                <ControlsOverlay
+                  hasHit={hasFoundSurface}
+                  placedCount={placedItems.length}
+                  itemName={item.name}
+                  onExit={onExit}
+                  onPlace={placeItem}
+                  onRotateLeft={() => setPendingRotation((r) => r - Math.PI / 8)}
+                  onRotateRight={() => setPendingRotation((r) => r + Math.PI / 8)}
+                  onScaleDown={() => setPendingScale((s) => Math.max(s * 0.8, 0.1))}
+                  onScaleUp={() => setPendingScale((s) => Math.min(s * 1.25, 5))}
+                  onClearAll={() => setPlacedItems([])}
+                  hint="Apuntá al suelo para detectar superficies"
+                />
+              </XRDomOverlay>
+            </IfInSessionMode>
+          </XR>
+        </Canvas>
+      )}
 
       {!isInAR && (
         <div className="absolute inset-0 flex flex-col pointer-events-none">
@@ -399,18 +413,20 @@ function ARCameraWebXR({ item, onExit }: { item: Furniture; onExit: () => void }
             ← Salir
           </button>
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-white/40 text-sm text-center px-8">
-              Chrome en Android con soporte WebXR
-            </p>
+            {arStarted && (
+              <p className="text-white/50 text-sm animate-pulse">Iniciando AR...</p>
+            )}
           </div>
           <div className="flex flex-col items-center gap-3 p-6 pointer-events-auto">
             <p className="text-white/70 text-sm font-medium">{item.name}</p>
-            <button
-              onClick={() => xrStore.enterAR()}
-              className="bg-amber-500 text-black font-bold px-10 py-4 rounded-full text-lg shadow-xl w-full max-w-xs"
-            >
-              Iniciar AR
-            </button>
+            {!arStarted && (
+              <button
+                onClick={handleStartAR}
+                className="bg-amber-500 text-black font-bold px-10 py-4 rounded-full text-lg shadow-xl w-full max-w-xs"
+              >
+                Iniciar AR
+              </button>
+            )}
           </div>
         </div>
       )}
