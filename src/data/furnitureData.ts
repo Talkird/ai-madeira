@@ -1,6 +1,4 @@
 import type { Furniture } from "../types/furniture";
-import mesa from "../assets/mesa.glb?url";
-import silla from "../assets/silla.glb?url";
 import sillaBarMarron from "../assets/silla_de_bar_marron.glb?url";
 import sillaBarCircular from "../assets/silla_de_bar_circular.glb?url";
 import mesaConCajon from "../assets/mesa_con_cajon.glb?url";
@@ -11,21 +9,9 @@ import sillon from "../assets/sillon.glb?url";
 import mesitaDeLuz from "../assets/mesita_de_luz.glb?url";
 import libreria from "../assets/libreria.glb?url";
 import silla1 from "../assets/silla1.png";
-import silla2 from "../assets/silla2.png";
 
 export const furnitureItems: Furniture[] = [
   // ── Sillas ──────────────────────────────────────────────────────────────────
-  {
-    id: "silla-bar-1",
-    name: "Silla de barra",
-    category: "silla",
-    description: "Silla de barra con diseño moderno, perfecta para cocinas y bares.",
-    dimensions: { width: 0.65, height: 1.05, depth: 0.65 },
-    color: "#2D3748",
-    price: 150000,
-    model: silla as string,
-    img: silla2,
-  },
   {
     id: "silla-bar-marron",
     name: "Silla de barra marrón",
@@ -56,7 +42,7 @@ export const furnitureItems: Furniture[] = [
     dimensions: { width: 1.8, height: 0.75, depth: 0.9 },
     color: "#8B4513",
     price: 220000,
-    model: mesa as string,
+    model: mesaOvalo as string,
     img: silla1,
   },
   {
