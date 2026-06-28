@@ -1,23 +1,21 @@
 import { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment, useGLTF, Bounds } from "@react-three/drei";
+import { OrbitControls, Environment, useGLTF, Bounds, useBounds } from "@react-three/drei";
 import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
 
 function GLBModel({ model }: { model: string }) {
   const { scene } = useGLTF(model);
-
   const cloned = useRef(scene.clone());
+  const bounds = useBounds();
 
   useEffect(() => {
     const box = new THREE.Box3().setFromObject(cloned.current);
-
     const center = new THREE.Vector3();
-
     box.getCenter(center);
-
     cloned.current.position.set(-center.x, -box.min.y, -center.z);
-  }, []);
+    bounds.refresh().fit();
+  }, [bounds]);
 
   return <primitive object={cloned.current} />;
 }

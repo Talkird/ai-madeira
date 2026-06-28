@@ -1,6 +1,4 @@
 import type { Furniture } from "../types/furniture";
-import sillaBarMarron from "../assets/silla_de_bar_marron.glb?url";
-import sillaBarCircular from "../assets/silla_de_bar_circular.glb?url";
 import mesaConCajon from "../assets/mesa_con_cajon.glb?url";
 import mesaCafe from "../assets/mesa_cafe.glb?url";
 import mesaOvalo from "../assets/mesa_ovalo.glb?url";
@@ -11,28 +9,6 @@ import libreria from "../assets/libreria.glb?url";
 import silla1 from "../assets/silla1.png";
 
 export const furnitureItems: Furniture[] = [
-  // ── Sillas ──────────────────────────────────────────────────────────────────
-  {
-    id: "silla-bar-marron",
-    name: "Silla de barra marrón",
-    category: "silla",
-    description: "Silla de barra tapizada en cuero marrón con patas metálicas.",
-    dimensions: { width: 0.55, height: 1.0, depth: 0.55 },
-    color: "#795548",
-    price: 165000,
-    model: sillaBarMarron as string,
-  },
-  {
-    id: "silla-bar-circular",
-    name: "Silla de barra circular",
-    category: "silla",
-    description: "Silla giratoria de asiento circular, ideal para barras de cocina.",
-    dimensions: { width: 0.45, height: 1.05, depth: 0.45 },
-    color: "#37474F",
-    price: 145000,
-    model: sillaBarCircular as string,
-  },
-
   // ── Mesas ───────────────────────────────────────────────────────────────────
   {
     id: "mesa-comedor",

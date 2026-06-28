@@ -1,7 +1,7 @@
 export interface Furniture {
   id: string;
   name: string;
-  category: "silla" | "mesa" | "sillon" | "mesita" | "libreria" | "cama";
+  category: "mesa" | "sillon" | "mesita" | "libreria" | "cama";
   description: string;
   dimensions: {
     width: number;
