@@ -147,7 +147,7 @@ export function FurnitureViewer({ furniture, onBack, onEnterAR }: FurnitureViewe
           ].map(({ label, val }) => (
             <div key={label} style={{ background: "rgba(92,51,23,0.25)", border: "1px solid rgba(92,51,23,0.5)", borderRadius: 8, padding: "8px 14px", textAlign: "center" }}>
               <div style={{ color: "#7a5230", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>{label}</div>
-              <div style={{ color: "#c4956a", fontSize: 15, fontWeight: 700 }}>{val * 100}<span style={{ fontSize: 11, fontWeight: 400, marginLeft: 2 }}>cm</span></div>
+              <div style={{ color: "#c4956a", fontSize: 15, fontWeight: 700 }}>{Math.round(val * 100)}<span style={{ fontSize: 11, fontWeight: 400, marginLeft: 2 }}>cm</span></div>
             </div>
           ))}
         </div>

@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import type { Furniture } from "../types/furniture";
 import { furnitureItems } from "../data/furnitureData";
-import heroPng from "../assets/hero.png";
 
 interface FurnitureGalleryProps {
   onSelectFurniture: (furniture: Furniture) => void;
@@ -35,34 +34,16 @@ export function FurnitureGallery({ onSelectFurniture }: FurnitureGalleryProps) {
   return (
     <div style={{ minHeight: "100vh", ...woodGrainBg("#1a0d06") }}>
 
-      {/* ── HERO ───────────────────────────────────────────────────────────── */}
-      <header
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          borderBottom: "3px solid #8B5E2A",
-        }}
-      >
-        {/* Background photo */}
-        <img
-          src={heroPng}
-          alt=""
-          aria-hidden
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-        />
-        {/* Dark + warm gradient overlay */}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, rgba(12,5,2,0.78) 0%, rgba(40,18,6,0.60) 60%, rgba(12,5,2,0.85) 100%)" }} />
-        {/* Grain overlay */}
-        <div style={{ position: "absolute", inset: 0, ...woodGrainBg("transparent"), opacity: 0.6 }} />
-
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "72px 24px 56px", textAlign: "center" }}>
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      <header style={{ borderBottom: "3px solid #8B5E2A", ...woodGrainBg("#100804") }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "52px 24px 40px", textAlign: "center" }}>
           <p style={{ color: "#d97706", fontSize: 12, fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: 14 }}>
             — Artesanía en madera —
           </p>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(44px,7vw,80px)", fontWeight: 700, color: "#f5e6d3", lineHeight: 1.05, marginBottom: 16, textShadow: "0 2px 24px rgba(0,0,0,0.6)" }}>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(44px,7vw,72px)", fontWeight: 700, color: "#f5e6d3", lineHeight: 1.05, marginBottom: 16 }}>
             Madeira
           </h1>
-          <p style={{ color: "#c4956a", fontSize: 18, maxWidth: 520, margin: "0 auto 28px", lineHeight: 1.6 }}>
+          <p style={{ color: "#c4956a", fontSize: 16, maxWidth: 480, margin: "0 auto 24px", lineHeight: 1.6 }}>
             Muebles artesanales de alta calidad. Visualizalos en tu espacio con Realidad Aumentada.
           </p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "rgba(217,119,6,0.12)", border: "1px solid rgba(217,119,6,0.35)", borderRadius: 999, padding: "8px 20px" }}>
@@ -196,7 +177,7 @@ function FurnitureCard({
         </p>
 
         <div style={{ display: "flex", gap: 10, fontSize: 11, color: "#7a5230", flexWrap: "wrap" }}>
-          <span>{furniture.dimensions.width * 100}cm×{furniture.dimensions.height * 100}cm×{furniture.dimensions.depth * 100}cm</span>
+          <span>{Math.round(furniture.dimensions.width * 100)}cm × {Math.round(furniture.dimensions.height * 100)}cm × {Math.round(furniture.dimensions.depth * 100)}cm</span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 10, borderTop: "1px solid rgba(92,51,23,0.5)" }}>
