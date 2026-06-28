@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment, useGLTF } from "@react-three/drei";
+import { OrbitControls, Environment, useGLTF, Bounds } from "@react-three/drei";
 import * as THREE from "three";
 import type { Furniture } from "../types/furniture";
 
@@ -56,32 +56,28 @@ export function FurnitureViewer({
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-1 bg-gray-950">
-        <Canvas
-          camera={{
-            position: [2, 2, 3],
-            fov: 50,
-          }}
-        >
+        <Canvas camera={{ position: [0, 1, 5], fov: 45 }}>
           <ambientLight intensity={1} />
-
           <directionalLight position={[5, 5, 5]} intensity={2} />
 
           <Suspense fallback={null}>
-            {furniture.model ? (
-              <GLBModel model={furniture.model} />
-            ) : (
-              <FallbackFurniture furniture={furniture} />
-            )}
-
+            <Bounds fit clip observe margin={1.4}>
+              {furniture.model ? (
+                <GLBModel model={furniture.model} />
+              ) : (
+                <FallbackFurniture furniture={furniture} />
+              )}
+            </Bounds>
             <Environment preset="city" />
           </Suspense>
 
           <OrbitControls
+            makeDefault
             enablePan={false}
             enableDamping
             dampingFactor={0.05}
-            minDistance={1}
-            maxDistance={8}
+            minDistance={0.5}
+            maxDistance={10}
           />
         </Canvas>
       </div>
