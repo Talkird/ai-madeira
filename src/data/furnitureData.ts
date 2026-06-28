@@ -1,25 +1,29 @@
 import type { Furniture } from "../types/furniture";
-import mesaConCajon from "../assets/mesa_con_cajon.glb?url";
-import mesaCafe from "../assets/mesa_cafe.glb?url";
-import mesaOvalo from "../assets/mesa_ovalo.glb?url";
-import mesaRedonda from "../assets/mesa_redonda.glb?url";
-import sillon from "../assets/sillon.glb?url";
-import mesitaDeLuz from "../assets/mesita_de_luz.glb?url";
-import libreria from "../assets/libreria.glb?url";
-import silla1 from "../assets/silla1.png";
+import mesaConCajonGlb from "../assets/mesa_con_cajon.glb?url";
+import mesaCafeGlb from "../assets/mesa_cafe.glb?url";
+import mesaOvaloGlb from "../assets/mesa_ovalo.glb?url";
+import mesaRedondaGlb from "../assets/mesa_redonda.glb?url";
+import sillonGlb from "../assets/sillon.glb?url";
+import mesitaDeLuzGlb from "../assets/mesita_de_luz.glb?url";
+import imgMesaCajon from "../assets/mesa_con_cajon.png";
+import imgMesaCafe from "../assets/mesa_cafe.png";
+import imgMesaOvalo from "../assets/mesa_ovalo.png";
+import imgMesaRedonda from "../assets/mesa_redonda.png";
+import imgSillon from "../assets/sillon.png";
+import imgMesitaDeLuz from "../assets/mesita_de_luz.png";
 
 export const furnitureItems: Furniture[] = [
   // ── Mesas ───────────────────────────────────────────────────────────────────
   {
-    id: "mesa-comedor",
-    name: "Mesa de comedor",
+    id: "mesa-ovalo",
+    name: "Mesa ovalada",
     category: "mesa",
-    description: "Mesa de comedor rectangular en madera maciza, ideal para 6 personas.",
-    dimensions: { width: 1.8, height: 0.75, depth: 0.9 },
-    color: "#8B4513",
-    price: 220000,
-    model: mesaOvalo as string,
-    img: silla1,
+    description: "Mesa de comedor ovalada en madera maciza, elegante y funcional.",
+    dimensions: { width: 1.6, height: 0.75, depth: 0.95 },
+    color: "#BCAAA4",
+    price: 240000,
+    model: mesaOvaloGlb as string,
+    img: imgMesaOvalo,
   },
   {
     id: "mesa-cajon",
@@ -29,7 +33,8 @@ export const furnitureItems: Furniture[] = [
     dimensions: { width: 1.4, height: 0.75, depth: 0.7 },
     color: "#6D4C41",
     price: 195000,
-    model: mesaConCajon as string,
+    model: mesaConCajonGlb as string,
+    img: imgMesaCajon,
   },
   {
     id: "mesa-cafe",
@@ -39,17 +44,8 @@ export const furnitureItems: Furniture[] = [
     dimensions: { width: 1.1, height: 0.45, depth: 0.6 },
     color: "#5D4037",
     price: 130000,
-    model: mesaCafe as string,
-  },
-  {
-    id: "mesa-ovalo",
-    name: "Mesa ovalada",
-    category: "mesa",
-    description: "Mesa de comedor ovalada en madera clara, elegante y funcional.",
-    dimensions: { width: 1.6, height: 0.75, depth: 0.95 },
-    color: "#BCAAA4",
-    price: 240000,
-    model: mesaOvalo as string,
+    model: mesaCafeGlb as string,
+    img: imgMesaCafe,
   },
   {
     id: "mesa-redonda",
@@ -59,7 +55,8 @@ export const furnitureItems: Furniture[] = [
     dimensions: { width: 0.9, height: 0.75, depth: 0.9 },
     color: "#8D6E63",
     price: 175000,
-    model: mesaRedonda as string,
+    model: mesaRedondaGlb as string,
+    img: imgMesaRedonda,
   },
 
   // ── Sillones ────────────────────────────────────────────────────────────────
@@ -71,7 +68,8 @@ export const furnitureItems: Furniture[] = [
     dimensions: { width: 0.85, height: 0.9, depth: 0.85 },
     color: "#546E7A",
     price: 280000,
-    model: sillon as string,
+    model: sillonGlb as string,
+    img: imgSillon,
   },
 
   // ── Mesitas ─────────────────────────────────────────────────────────────────
@@ -83,18 +81,7 @@ export const furnitureItems: Furniture[] = [
     dimensions: { width: 0.5, height: 0.55, depth: 0.4 },
     color: "#A1887F",
     price: 95000,
-    model: mesitaDeLuz as string,
-  },
-
-  // ── Librerías ────────────────────────────────────────────────────────────────
-  {
-    id: "libreria-1",
-    name: "Librería",
-    category: "libreria",
-    description: "Librería de madera con múltiples estantes, ideal para organizar libros y objetos decorativos.",
-    dimensions: { width: 0.9, height: 1.8, depth: 0.35 },
-    color: "#4E342E",
-    price: 320000,
-    model: libreria as string,
+    model: mesitaDeLuzGlb as string,
+    img: imgMesitaDeLuz,
   },
 ];
