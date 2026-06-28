@@ -278,8 +278,7 @@ function HitTestScene({
   const ghostRef = useRef<THREE.Group>(null);
   const firstHitRef = useRef(false);
   const hasHitRef = useRef(false);
-  const floatPosRef = useRef(new THREE.Vector3());
-  const { camera } = useThree();
+  const dirRef = useRef(new THREE.Vector3());
 
   useXRHitTest((results, getWorldMatrix) => {
     if (results.length === 0) {
@@ -299,17 +298,18 @@ function HitTestScene({
     }
   }, "viewer");
 
-  useFrame(() => {
+  useFrame((state) => {
     if (!ghostRef.current) return;
     ghostRef.current.rotation.y = pendingRef.current.rotation;
     ghostRef.current.scale.setScalar(pendingRef.current.scale);
     if (hasHitRef.current) {
       ghostRef.current.position.copy(hitPositionRef.current);
     } else {
-      // No surface yet — float the ghost 1.2 m in front of the camera
-      camera.getWorldDirection(floatPosRef.current);
-      floatPosRef.current.multiplyScalar(1.2).add(camera.position);
-      ghostRef.current.position.copy(floatPosRef.current);
+      // Float 1.5 m in front of the viewer using the live XR camera
+      state.camera.getWorldDirection(dirRef.current);
+      dirRef.current.multiplyScalar(1.5).add(state.camera.position);
+      dirRef.current.y = Math.max(dirRef.current.y - 0.5, 0.01);
+      ghostRef.current.position.copy(dirRef.current);
     }
   });
 

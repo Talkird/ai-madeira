@@ -6,6 +6,14 @@ interface FurnitureGalleryProps {
   onSelectFurniture: (furniture: Furniture) => void;
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  mesa: "Mesas",
+  sillon: "Sillones",
+  mesita: "Mesitas de Luz",
+  libreria: "Librerías",
+  cama: "Camas",
+};
+
 export function FurnitureGallery({ onSelectFurniture }: FurnitureGalleryProps) {
   const categories = useMemo(
     () => [...new Set(furnitureItems.map((item) => item.category))],
@@ -16,105 +24,92 @@ export function FurnitureGallery({ onSelectFurniture }: FurnitureGalleryProps) {
     `$ ${price.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
   return (
-    <div className="min-h-screen  bg-gray-900">
+    <div className="min-h-screen" style={{ background: "#1c0f07" }}>
       {/* HEADER */}
-      <header className="bg-gray-800 py-8 px-4">
-        <h1 className="text-4xl font-bold text-white text-center">
-          Madeira <br />
-          <span className="text-lg md:text-2xl">
-            Visualizador de Muebles en AR
-          </span>
-        </h1>
-
-        <p className="text-amber-300 font-medium text-center mt-2">
-          Selecciona muebles y prévisualízalos en tu espacio
-        </p>
+      <header style={{ background: "#120806", borderBottom: "2px solid #5c3317" }} className="py-10 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col items-center gap-2">
+          <div className="flex items-center gap-3 mb-1">
+            <span style={{ color: "#d97706", fontSize: 32 }}>🪵</span>
+            <h1 style={{ color: "#f5e6d3", fontFamily: "Georgia, serif" }} className="text-5xl font-bold tracking-tight">
+              Madeira
+            </h1>
+            <span style={{ color: "#d97706", fontSize: 32 }}>🪵</span>
+          </div>
+          <p style={{ color: "#c4956a" }} className="text-base font-medium tracking-widest uppercase">
+            Carpintería &amp; Muebles Artesanales
+          </p>
+          <p style={{ color: "#a06840" }} className="text-sm mt-1">
+            Visualizá nuestros muebles en tu espacio con Realidad Aumentada
+          </p>
+        </div>
       </header>
 
       {/* CONTENT */}
       <main className="p-6 max-w-7xl mx-auto">
         {categories.map((category) => {
-          const categoryItems = furnitureItems.filter(
-            (item) => item.category === category,
-          );
-
+          const categoryItems = furnitureItems.filter((item) => item.category === category);
           return (
-            <section key={category} className="mb-10">
-              <h2 className="text-2xl font-bold text-white mb-4 capitalize">
-                {category}
-              </h2>
+            <section key={category} className="mb-12">
+              {/* Category heading */}
+              <div className="flex items-center gap-4 mb-6">
+                <div style={{ height: 2, flex: "0 0 24px", background: "#d97706" }} />
+                <h2 style={{ color: "#f5e6d3", fontFamily: "Georgia, serif" }} className="text-2xl font-bold">
+                  {CATEGORY_LABELS[category] ?? category}
+                </h2>
+                <div style={{ height: 2, flex: 1, background: "linear-gradient(to right, #5c3317, transparent)" }} />
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categoryItems.map((furniture) => (
                   <button
                     key={furniture.id}
                     onClick={() => onSelectFurniture(furniture)}
-                    className="
-                      group
-                      bg-gray-700
-                      rounded-lg
-                      overflow-hidden
-                      hover:scale-[102%]
-                      transition-all
-                      duration-200
-                      hover:opacity-75
-                      text-left
-                      cursor-pointer
-                    "
+                    className="group text-left cursor-pointer transition-all duration-200 hover:scale-[102%]"
+                    style={{
+                      background: "#2a1509",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      border: "1px solid #5c3317",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#d97706")}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#5c3317")}
                   >
                     {/* PREVIEW */}
-                    <div className="aspect-square bg-gray-800 flex items-center justify-center relative overflow-hidden">
+                    <div className="aspect-square flex items-center justify-center relative overflow-hidden" style={{ background: "#1a0c06" }}>
                       {furniture.img ? (
-                        <img
-                          src={furniture.img}
-                          alt={furniture.name}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={furniture.img} alt={furniture.name} className="w-full h-full object-cover" />
                       ) : (
-                        <div
-                          className="w-20 h-20 rounded-md opacity-80"
-                          style={{ backgroundColor: furniture.color }}
-                        />
+                        <div className="flex flex-col items-center gap-2 opacity-60">
+                          <div className="w-16 h-16 rounded-lg" style={{ background: furniture.color }} />
+                          <span style={{ color: "#a06840", fontSize: 11 }}>Sin imagen</span>
+                        </div>
                       )}
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "linear-gradient(to top, rgba(18,8,6,0.7), transparent)" }} />
+                      {furniture.model && (
+                        <span className="absolute top-3 right-3 text-xs font-bold px-2 py-1 rounded" style={{ background: "#92400e", color: "#fbbf24" }}>
+                          3D
+                        </span>
+                      )}
                     </div>
 
                     {/* INFO */}
                     <div className="p-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-white  transition-colors">
-                          {furniture.name}
-                        </h3>
-
-                        {furniture.model && (
-                          <span className="bg-green-600 text-white text-xs px-2 py-1 rounded">
-                            3D
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                      <h3 style={{ color: "#f5e6d3", fontFamily: "Georgia, serif" }} className="text-lg font-semibold">
+                        {furniture.name}
+                      </h3>
+                      <p style={{ color: "#a06840" }} className="text-sm mt-1 line-clamp-2">
                         {furniture.description}
                       </p>
 
-                      {/* DIMENSIONS */}
-                      <div className="mt-3 text-xs text-gray-500">
-                        <span>Ancho: {furniture.dimensions.width * 100}cm</span>
-                        {" • "}
-                        <span>Alto: {furniture.dimensions.height * 100}cm</span>
-                        {" • "}
-                        <span>
-                          Profundidad: {furniture.dimensions.depth * 100}cm
-                        </span>
+                      <div className="mt-3 text-xs" style={{ color: "#7a5230" }}>
+                        {furniture.dimensions.width * 100}cm × {furniture.dimensions.height * 100}cm × {furniture.dimensions.depth * 100}cm
                       </div>
 
-                      {/* FOOTER */}
                       <div className="mt-4 flex items-center justify-between">
-                        <span className="text-amber-400 font-bold">
+                        <span style={{ color: "#d97706" }} className="text-lg font-bold">
                           {formatPrice(furniture.price)}
                         </span>
-
-                        <span className="text-amber-500  font-semibold text-sm">
+                        <span style={{ color: "#d97706" }} className="text-sm font-semibold group-hover:translate-x-1 transition-transform inline-block">
                           Ver →
                         </span>
                       </div>
@@ -128,10 +123,9 @@ export function FurnitureGallery({ onSelectFurniture }: FurnitureGalleryProps) {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-gray-800 border-t border-gray-700 p-6 mt-10">
-        <p className="text-gray-400 text-center text-sm">
-          Usa el modo AR en un dispositivo móvil con cámara para visualizar los
-          muebles en tu entorno real.
+      <footer style={{ background: "#120806", borderTop: "1px solid #5c3317" }} className="p-6 mt-4">
+        <p style={{ color: "#7a5230" }} className="text-center text-sm">
+          Usá el modo AR en Chrome para Android para ver los muebles en tu espacio real.
         </p>
       </footer>
     </div>
