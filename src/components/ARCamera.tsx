@@ -277,6 +277,9 @@ function HitTestScene({
   const reticleRef = useRef<THREE.Mesh>(null);
   const ghostRef = useRef<THREE.Group>(null);
   const firstHitRef = useRef(false);
+  const hasHitRef = useRef(false);
+  const floatPosRef = useRef(new THREE.Vector3());
+  const { camera } = useThree();
 
   useXRHitTest((results, getWorldMatrix) => {
     if (results.length === 0) {
@@ -285,6 +288,7 @@ function HitTestScene({
     }
     getWorldMatrix(matrixHelper, results[0]);
     hitPositionRef.current.setFromMatrixPosition(matrixHelper);
+    hasHitRef.current = true;
     if (reticleRef.current) {
       reticleRef.current.visible = true;
       reticleRef.current.position.copy(hitPositionRef.current);
@@ -297,12 +301,16 @@ function HitTestScene({
 
   useFrame(() => {
     if (!ghostRef.current) return;
-    const visible = reticleRef.current?.visible ?? false;
-    if (!visible) { ghostRef.current.visible = false; return; }
-    ghostRef.current.visible = true;
-    ghostRef.current.position.copy(hitPositionRef.current);
     ghostRef.current.rotation.y = pendingRef.current.rotation;
     ghostRef.current.scale.setScalar(pendingRef.current.scale);
+    if (hasHitRef.current) {
+      ghostRef.current.position.copy(hitPositionRef.current);
+    } else {
+      // No surface yet — float the ghost 1.2 m in front of the camera
+      camera.getWorldDirection(floatPosRef.current);
+      floatPosRef.current.multiplyScalar(1.2).add(camera.position);
+      ghostRef.current.position.copy(floatPosRef.current);
+    }
   });
 
   return (
@@ -311,7 +319,7 @@ function HitTestScene({
         <ringGeometry args={[0.06, 0.1, 32]} />
         <meshStandardMaterial color="white" side={THREE.DoubleSide} transparent opacity={0.9} />
       </mesh>
-      <group ref={ghostRef} visible={false}>
+      <group ref={ghostRef}>
         <FurnitureContent item={item} transparent />
       </group>
       <PlacedItems item={item} placed={placedItems} />
