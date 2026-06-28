@@ -13,10 +13,7 @@ export function FurnitureGallery({ onSelectFurniture }: FurnitureGalleryProps) {
   );
 
   const formatPrice = (price: number) =>
-    price.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    });
+    `$ ${price.toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
 
   return (
     <div className="min-h-screen  bg-gray-900">
@@ -71,7 +68,7 @@ export function FurnitureGallery({ onSelectFurniture }: FurnitureGalleryProps) {
                         <img
                           src={furniture.img}
                           alt={furniture.name}
-                          className="w-32 h-32 rounded-md"
+                          className="w-full h-full object-cover"
                         />
                       ) : (
                         <div
