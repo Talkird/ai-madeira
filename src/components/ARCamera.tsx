@@ -338,6 +338,37 @@ function ARCameraWebXR({ item, onExit }: { item: Furniture; onExit: () => void }
   const pendingRef = useRef({ rotation: 0, scale: 1 });
   pendingRef.current = { rotation: pendingRotation, scale: pendingScale };
 
+  // Camera preview before AR session starts
+  const previewVideoRef = useRef<HTMLVideoElement>(null);
+  const previewStreamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: "environment" } })
+      .then((stream) => {
+        if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+        previewStreamRef.current = stream;
+        if (previewVideoRef.current) {
+          previewVideoRef.current.srcObject = stream;
+        }
+      })
+      .catch(() => { /* camera unavailable — stays black */ });
+    return () => {
+      cancelled = true;
+      previewStreamRef.current?.getTracks().forEach((t) => t.stop());
+      previewStreamRef.current = null;
+    };
+  }, []);
+
+  // Stop the preview stream as soon as WebXR takes over
+  useEffect(() => {
+    if (arStarted) {
+      previewStreamRef.current?.getTracks().forEach((t) => t.stop());
+      previewStreamRef.current = null;
+    }
+  }, [arStarted]);
+
   const handleSessionChange = useCallback((active: boolean) => {
     setIsInAR(active);
     if (!active) setHasFoundSurface(false);
@@ -359,7 +390,6 @@ function ARCameraWebXR({ item, onExit }: { item: Furniture; onExit: () => void }
 
   const handleStartAR = useCallback(() => {
     setArStarted(true);
-    // enterAR is called after the Canvas/XR has mounted (see effect below)
   }, []);
 
   useEffect(() => {
@@ -370,6 +400,17 @@ function ARCameraWebXR({ item, onExit }: { item: Furniture; onExit: () => void }
 
   return (
     <div className="absolute inset-0 bg-black">
+      {/* Live camera preview shown only before AR session begins */}
+      {!arStarted && (
+        <video
+          ref={previewVideoRef}
+          className="absolute inset-0 w-full h-full object-cover"
+          autoPlay
+          muted
+          playsInline
+        />
+      )}
+
       {arStarted && (
         <Canvas gl={{ alpha: true, antialias: true }}>
           <XR store={xrStore}>
