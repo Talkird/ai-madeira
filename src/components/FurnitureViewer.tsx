@@ -53,8 +53,8 @@ export function FurnitureViewer({
 }: FurnitureViewerProps) {
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="flex-1 bg-gray-950">
-        <Canvas camera={{ position: [0, 1, 5], fov: 45 }}>
+      <div className="bg-gray-950 h-[60vh]">
+        <Canvas style={{ height: "100%" }} camera={{ position: [0, 1, 5], fov: 45 }}>
           <ambientLight intensity={1} />
           <directionalLight position={[5, 5, 5]} intensity={2} />
 
