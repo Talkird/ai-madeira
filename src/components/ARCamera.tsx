@@ -325,6 +325,13 @@ function SessionStateBridge({ onSessionChange }: { onSessionChange: (active: boo
   return null;
 }
 
+function AutoEnterAR({ store }: { store: ReturnType<typeof createXRStore> }) {
+  useEffect(() => {
+    store.enterAR();
+  }, [store]);
+  return null;
+}
+
 function ARCameraWebXR({ item, onExit }: { item: Furniture; onExit: () => void }) {
   const [xrStore] = useState(() => createXRStore());
   const [arStarted, setArStarted] = useState(false);
@@ -392,12 +399,6 @@ function ARCameraWebXR({ item, onExit }: { item: Furniture; onExit: () => void }
     setArStarted(true);
   }, []);
 
-  useEffect(() => {
-    if (arStarted) {
-      xrStore.enterAR();
-    }
-  }, [arStarted, xrStore]);
-
   return (
     <div className="absolute inset-0 bg-black">
       {/* Live camera preview shown only before AR session begins */}
@@ -415,6 +416,7 @@ function ARCameraWebXR({ item, onExit }: { item: Furniture; onExit: () => void }
         <Canvas gl={{ alpha: true, antialias: true }}>
           <XR store={xrStore}>
             <SessionStateBridge onSessionChange={handleSessionChange} />
+            <AutoEnterAR store={xrStore} />
             <IfInSessionMode allow="immersive-ar">
               <ambientLight intensity={1.5} />
               <directionalLight position={[2, 5, 2]} intensity={1} />
